@@ -1,0 +1,86 @@
+{
+  "query_id": "stream-a-v1",
+  "stream": "A",
+  "version": 1,
+  "status": "baseline",
+  "description": "Secondary literature (surveys, reviews, tutorials, taxonomies) on privacy in smart metering, AMI, and smart grids. Baseline variant: all concept groups searched in title, abstract and keywords.",
+  "rationale": "No wildcards: IEEE Xplore allows at most two wildcard words per query, so plural/verb forms are enumerated explicitly. Privacy terms are kept generic in Stream A; inference-specific terms belong to Stream B.",
+  "concept_groups": {
+    "secondary_research": {
+      "operator": "OR",
+      "fields": ["title", "abstract", "keywords"],
+      "terms": [
+        "survey",
+        "review",
+        "systematic review",
+        "literature review",
+        "systematic mapping",
+        "mapping study",
+        "taxonomy",
+        "tutorial",
+        "overview",
+        "state of the art",
+        "state-of-the-art"
+      ]
+    },
+    "domain": {
+      "operator": "OR",
+      "fields": ["title", "abstract", "keywords"],
+      "terms": [
+        "smart meter",
+        "smart meters",
+        "smart metering",
+        "advanced metering infrastructure",
+        "AMI",
+        "smart grid",
+        "smart grids",
+        "load profile",
+        "load profiles",
+        "electricity consumption data",
+        "energy consumption data"
+      ]
+    },
+    "privacy": {
+      "operator": "OR",
+      "fields": ["title", "abstract", "keywords"],
+      "terms": [
+        "privacy",
+        "consumer privacy",
+        "data privacy",
+        "information privacy",
+        "privacy preserving",
+        "privacy-preserving",
+        "anonymization",
+        "anonymisation",
+        "de-identification",
+        "re-identification"
+      ]
+    }
+  },
+  "group_operator": "AND",
+  "exclusion_terms": [],
+  "filters": {
+    "start_year": 2009,
+    "end_year": 2026,
+    "languages": ["English"],
+    "content_types": {
+      "ieee": ["Journals", "Conferences", "Magazines", "Early Access"],
+      "scopus_doctypes": ["ar", "re", "cp", "ch"]
+    }
+  },
+  "retrieval": {
+    "page_size": 200,
+    "sleep_seconds": 1.0
+  },
+  "sensitivity_variants": {
+    "v2_title_restricted": {
+      "description": "Secondary-research terms must appear in the title. Applied locally to the v1 result set (title is a subset of the metadata searched in v1).",
+      "restrict_group_to_title": "secondary_research"
+    },
+    "v3_no_generic_grid": {
+      "description": "Drop 'smart grid'/'smart grids' from the domain group to measure how many records are only reachable via the generic grid terms.",
+      "drop_terms": {"domain": ["smart grid", "smart grids"]}
+    }
+  },
+  "seed_set": "seeds/stream_a_seeds.txt"
+}

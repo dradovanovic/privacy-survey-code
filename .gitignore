@@ -16,7 +16,7 @@ venv/
 !.env.example
 
 # Ignore folders for data and models
-/data/
+/data/raw
 
 # Ignore other system or editor-specific files
 .DS_Store
