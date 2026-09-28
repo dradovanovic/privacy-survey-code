@@ -15,5 +15,5 @@ Data analytics in the electricity sector--A quantitative and qualitative literat
 Deep learning techniques for smart meter data analytics: A review;10.1007/s42979-022-01161-6;Eskandarnia22a;scopus
 A survey of privacy preserving schemes in IoE enabled Smart Grid Advanced Metering Infrastructure;10.1007/s10586-018-2820-9;Desai19a;scopus
 Intelligent Buildings in Smart Grids: A Survey on Security and Privacy Issues Related to Energy Management;10.3390/en14092733;Llaria21a;scopus
-Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures;10.1109/COMST.2014.2320093;Komninos14a;ieee
+Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures;10.1109/COMST.2014.2320093;Komninos14a;snowballing;metadata-unreachable: in IEEE, but no privacy term in title/abstract and no index terms returned (stream-a-v1 diagnosis 2026-09-28); expected via snowballing; A-I3 satisfied by section 'Ensuring Confidentiality and Privacy' (to be verified as recovered by snowballing)
 Privacy-Preserving Data Aggregation in Smart Metering Systems: An Overview;10.1109/MSP.2012.2228343;Erkin13a;ieee

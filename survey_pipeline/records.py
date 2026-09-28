@@ -217,13 +217,14 @@ def load_bib_entries(bib_path: str | Path) -> list[dict]:
 def load_seed_set(path: str | Path, bib_path: str | Path | None = None) -> list[dict]:
     """
     seeds/<stream>_seeds.txt lines are one of
-        Title;DOI;BibKey[;source_db]      (semicolon format; DOI or BibKey may be empty)
+        Title;DOI;BibKey[;source_db[;note]]  (semicolon format; DOI or BibKey may be empty;
+                                         the note is free text and may contain ';')
         doi:10.1109/...
         key:BibKey2021                    (resolved through the .bib)
         title:Exact or near-exact title
     Blank lines and '#' comments are ignored. The seed id is the BibKey when
     present, else the DOI, else the title. source_db (lower-case, e.g. ieee,
-    scopus) names the database the seed is expected from; None when absent.
+    scopus, snowballing) names where the seed is expected from; None when absent.
     """
     bib = {e["key"]: e for e in load_bib_entries(bib_path)} if bib_path else {}
     seeds = []
@@ -239,8 +240,9 @@ def load_seed_set(path: str | Path, bib_path: str | Path | None = None) -> list[
             if key and key in bib and not doi:
                 doi = bib[key]["doi"]
             source_db = parts[3].lower() if len(parts) > 3 and parts[3] else None
+            note = line.split(";", 4)[4].strip() or None if len(parts) > 4 else None
             seeds.append({"id": key or doi or title, "doi": doi, "title": title, "key": key,
-                          "source_db": source_db})
+                          "source_db": source_db, "note": note})
             continue
         kind, _, value = line.partition(":")
         kind, value = kind.strip().lower(), value.strip()

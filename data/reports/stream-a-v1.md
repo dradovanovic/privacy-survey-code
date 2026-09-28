@@ -64,11 +64,10 @@
 
 ## Seed recall
 
-- overall: 9/10 seeds retrieved (recall = 0.90); 9 pending (source database not searched yet); 19 seeds; searched: ieee
-- ieee: 9/10 seeds retrieved (recall = 0.90)
+- overall: 9/9 seeds retrieved (recall = 1.00); 10 pending (source database not searched yet); 19 seeds; searched: ieee
+- ieee: 9/9 seeds retrieved (recall = 1.00)
 - scopus: no seeds evaluated yet; 9 pending
-- missing:
-    - Komninos14a
+- snowballing: no seeds evaluated yet; 1 pending
 - pending:
     - Mitra24a
     - Abdalzaher22a
@@ -79,3 +78,6 @@
     - Eskandarnia22a
     - Desai19a
     - Llaria21a
+    - Komninos14a
+- seed notes:
+    - Komninos14a: metadata-unreachable: in IEEE, but no privacy term in title/abstract and no index terms returned (stream-a-v1 diagnosis 2026-09-28); expected via snowballing; A-I3 satisfied by section 'Ensuring Confidentiality and Privacy' (to be verified as recovered by snowballing)

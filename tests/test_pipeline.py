@@ -255,3 +255,13 @@ def test_summarize_reports_recall_per_source_db(tmp_path):
     assert "- ieee: 1/2 seeds retrieved (recall = 0.50)" in report
     assert "- scopus: no seeds evaluated yet; 1 pending" in report
     assert "- pending:\n    - C1" in report
+
+
+def test_seed_note_field_may_contain_semicolons(tmp_path):
+    f = tmp_path / "seeds.txt"
+    f.write_text("T;10.1/a;K1;snowballing;metadata-unreachable; expected via snowballing\nU;10.1/b;K2;ieee\n")
+    seeds = rec.load_seed_set(f)
+    assert seeds[0]["source_db"] == "snowballing"
+    assert seeds[0]["note"] == "metadata-unreachable; expected via snowballing"
+    assert seeds[1]["note"] is None
+    assert rec.seed_recall(seeds, [], searched_dbs=["ieee"])["pending"] == ["K1"]

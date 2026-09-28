@@ -227,6 +227,9 @@ def cmd_summarize(args) -> int:
         lines += [f"- {k}: {v}" for k, v in variant_counts.items()]
     if seed_report:
         lines += ["", "## Seed recall", ""] + _seed_recall_lines(seed_report)
+        notes = [(sd["id"], sd["note"]) for sd in seeds if sd.get("note")]
+        if notes:
+            lines += ["- seed notes:"] + [f"    - {i}: {n}" for i, n in notes]
     text = "\n".join(lines)
     rep = data_dir / "reports" / f"{qid}.md"
     rep.parent.mkdir(parents=True, exist_ok=True)

@@ -2,7 +2,7 @@
   "query_id": "stream-a-v1",
   "stream": "A",
   "version": 1,
-  "status": "baseline",
+  "status": "frozen",
   "description": "Secondary literature (surveys, reviews, tutorials, taxonomies) on privacy in smart metering, AMI, and smart grids. Baseline variant: all concept groups searched in title, abstract and keywords.",
   "rationale": "No wildcards: IEEE Xplore allows at most two wildcard words per query, so plural/verb forms are enumerated explicitly. Privacy terms are kept generic in Stream A; inference-specific terms belong to Stream B.",
   "concept_groups": {
