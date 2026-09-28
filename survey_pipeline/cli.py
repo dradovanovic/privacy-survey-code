@@ -4,7 +4,7 @@ survey_pipeline command line.
     python -m survey_pipeline.cli compile   queries/stream_a_v1.json [--db all]
     python -m survey_pipeline.cli search    queries/stream_a_v1.json --db ieee [--dry-run] [--max-pages N]
     python -m survey_pipeline.cli normalize queries/stream_a_v1.json --db ieee --run-id 2026...Z
-    python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib ../paper/refs.bib]
+    python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib /paper/bibliography.bib]
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
     python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
 
