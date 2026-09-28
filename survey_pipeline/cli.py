@@ -6,10 +6,12 @@ survey_pipeline command line.
     python -m survey_pipeline.cli normalize queries/stream_a_v1.json --db ieee --run-id 2026...Z
     python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib ../paper/refs.bib]
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
+    python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
 
 All output lives under data/ (override with --data-dir):
     data/compiled/<query_id>.md            compiled strings for every database (supplement material)
     data/raw/<db>/<query_id>/<run_id>/     every raw API page, untouched
+    data/raw/ieee/lookup/                  raw DOI / title lookup responses
     data/normalized/<query_id>.<db>.jsonl  unified records
     data/reports/<query_id>.md             counts, variants, seed recall
     data/screening/<query_id>.csv          one row per unique record, ready for screening
@@ -316,6 +318,24 @@ def cmd_diagnose_seeds(args) -> int:
 
 
 # ----------------------------------------------------------------------------
+# lookup
+# ----------------------------------------------------------------------------
+
+def cmd_lookup(args) -> int:
+    """One logged IEEE lookup by DOI or exact title; prints the raw response."""
+    from .ieee_client import IEEEClient, load_api_key
+
+    client = IEEEClient(load_api_key(), data_dir=args.data_dir)
+    if args.doi:
+        client.lookup_doi(args.doi, query_id=args.query_id)
+    else:
+        client.lookup_title(args.title, query_id=args.query_id)
+    print(client.last_raw.read_text(encoding="utf-8"))
+    print(f"raw -> {client.last_raw}", file=sys.stderr)
+    return 0
+
+
+# ----------------------------------------------------------------------------
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="survey_pipeline")
@@ -334,6 +354,10 @@ def main(argv=None) -> int:
     s.set_defaults(fn=cmd_summarize)
     s = sub.add_parser("diagnose-seeds"); s.add_argument("query"); s.add_argument("--bib", default=None)
     s.set_defaults(fn=cmd_diagnose_seeds)
+    s = sub.add_parser("lookup"); g = s.add_mutually_exclusive_group(required=True)
+    g.add_argument("--doi"); g.add_argument("--title")
+    s.add_argument("--query-id", default="manual-lookup", help="query_id recorded in runs.csv")
+    s.set_defaults(fn=cmd_lookup)
 
     args = p.parse_args(argv)
     return args.fn(args)

@@ -66,6 +66,7 @@ class IEEEClient:
         self.timeout = timeout
         self.max_retries = max_retries
         self.session = requests.Session()
+        self.last_raw: Path | None = None   # raw file of the most recent lookup
         self.run_log = self.data_dir / "runs.csv"
         self.data_dir.mkdir(parents=True, exist_ok=True)
         if not self.run_log.exists():
@@ -109,6 +110,7 @@ class IEEEClient:
         raw_dir.mkdir(parents=True, exist_ok=True)
         raw_path = raw_dir / f"{raw_name}.json"
         raw_path.write_text(json.dumps(body, indent=1), encoding="utf-8")
+        self.last_raw = raw_path
         articles = (body.get("articles") or []) if status == 200 else []
         total = body.get("total_records", "") if status == 200 else ""
         self._log({

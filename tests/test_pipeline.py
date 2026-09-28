@@ -196,3 +196,16 @@ def test_diagnose_seeds_falls_back_to_title_lookup(tmp_path, monkeypatch):
     assert "falling back to exact-title lookup" in report
     assert "in IEEE: 2014" in report
     assert "not indexed in IEEE" not in report
+
+
+def test_lookup_command_prints_raw_json(tmp_path, monkeypatch, capsys):
+    from survey_pipeline import ieee_client
+    body = {"total_records": 1, "articles": [{"doi": "10.1/a", "title": "T"}]}
+    monkeypatch.setattr(ieee_client.IEEEClient, "_get", lambda self, params: (body, 200))
+    monkeypatch.setattr(ieee_client, "load_api_key", lambda: "test-key")
+    monkeypatch.setattr(ieee_client.time, "sleep", lambda s: None)
+    assert main(["--data-dir", str(tmp_path), "lookup", "--title", "T"]) == 0
+    assert json.loads(capsys.readouterr().out) == body
+    assert "manual-lookup" in (tmp_path / "runs.csv").read_text(encoding="utf-8")
+    with pytest.raises(SystemExit):
+        main(["--data-dir", str(tmp_path), "lookup", "--doi", "x", "--title", "y"])
