@@ -117,6 +117,49 @@ def normalize_scopus(item: dict, query_id: str, run_id: str, raw_path: str) -> d
     }
 
 
+def openalex_abstract(inverted: dict | None) -> str:
+    """Rebuild an abstract from OpenAlex's abstract_inverted_index {word: [positions]}."""
+    if not inverted:
+        return ""
+    pos = {i: w for w, idxs in inverted.items() for i in idxs}
+    return " ".join(pos[i] for i in sorted(pos))
+
+
+def normalize_openalex(item: dict, query_id: str, run_id: str, raw_path: str) -> dict:
+    """
+    Map one element of the OpenAlex works 'results' array to the unified
+    schema. The native id is the OpenAlex work id (W...). Keywords are the
+    work's keywords followed by its concept display names, deduplicated.
+    referenced_works is not copied; it stays in the raw page.
+    """
+    native = (item.get("id") or "").rsplit("/", 1)[-1]
+    source = ((item.get("primary_location") or {}).get("source") or {})
+    keywords: list[str] = []
+    for k in (item.get("keywords") or []) + (item.get("concepts") or []):
+        name = (k.get("display_name") or "").strip()
+        if name and name.lower() not in {x.lower() for x in keywords}:
+            keywords.append(name)
+    authors = [((a.get("author") or {}).get("display_name") or "") for a in item.get("authorships") or []]
+    return {
+        "record_id": f"openalex:{native}",
+        "db": "openalex",
+        "query_id": query_id,
+        "run_id": run_id,
+        "doi": _clean_doi(item.get("doi")),
+        "title": (item.get("display_name") or item.get("title") or "").strip(),
+        "abstract": openalex_abstract(item.get("abstract_inverted_index")),
+        "year": item.get("publication_year"),
+        "venue": source.get("display_name"),
+        "content_type": item.get("type"),
+        "authors": authors,
+        "keywords": keywords,
+        "citing_count": item.get("cited_by_count"),
+        "url": item.get("id"),
+        "pdf_url": (item.get("primary_location") or {}).get("pdf_url"),
+        "raw_path": raw_path,
+    }
+
+
 # ----------------------------------------------------------------------------
 # Local evaluation of a query against a record
 # ----------------------------------------------------------------------------

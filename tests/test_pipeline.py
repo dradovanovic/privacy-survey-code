@@ -355,3 +355,29 @@ def test_openalex_compiler_filters_and_url_limit():
     q2["concept_groups"]["domain"]["terms"].append("meters, smart")
     with pytest.raises(qc.QueryValidationError, match="comma"):
         qc.compile_openalex(q2)
+
+
+OPENALEX_WORK = {
+    "id": "https://openalex.org/W123", "doi": "https://doi.org/10.1109/COMST.2014.2320093",
+    "display_name": "Survey in Smart Grid Security", "publication_year": 2014, "type": "review",
+    "abstract_inverted_index": {"smart": [1], "We": [0], "grids": [2], "survey": [3], "privacy": [4, 5]},
+    "primary_location": {"source": {"display_name": "IEEE Communications Surveys & Tutorials"}, "pdf_url": None},
+    "keywords": [{"display_name": "Smart grid", "score": 0.6}],
+    "concepts": [{"display_name": "smart grid"}, {"display_name": "Computer security"}],
+    "authorships": [{"author": {"display_name": "N. Komninos"}}],
+    "cited_by_count": 485, "referenced_works": ["https://openalex.org/W9"],
+}
+
+
+def test_normalize_openalex():
+    r = rec.normalize_openalex(OPENALEX_WORK, "q", "run", "raw.json")
+    assert r["record_id"] == "openalex:W123" and r["db"] == "openalex"
+    assert r["doi"] == "10.1109/comst.2014.2320093" and r["year"] == 2014
+    assert r["abstract"] == "We smart grids survey privacy privacy"
+    assert r["venue"] == "IEEE Communications Surveys & Tutorials" and r["content_type"] == "review"
+    assert r["keywords"] == ["Smart grid", "Computer security"]
+    assert r["citing_count"] == 485 and r["authors"] == ["N. Komninos"]
+    assert "referenced_works" not in r
+    bare = rec.normalize_openalex({"id": "https://openalex.org/W1", "primary_location": None,
+                                   "abstract_inverted_index": None}, "q", "run", "raw.json")
+    assert bare["abstract"] == "" and bare["venue"] is None and bare["doi"] is None
