@@ -32,6 +32,8 @@ RUN_LOG_HEADER = [
     "timestamp", "run_id", "db", "query_id", "content_type", "start_record",
     "max_records", "returned", "total_records", "status", "querytext",
 ]
+# lookup marker: IEEE counts a match but the response carries no article
+COUNTED_NOT_RETURNED = "counted_not_returned"
 
 
 def load_api_key() -> str:
@@ -92,26 +94,48 @@ class IEEEClient:
         with open(self.run_log, "a", newline="", encoding="utf-8") as fh:
             csv.DictWriter(fh, fieldnames=RUN_LOG_HEADER).writerow(row)
 
-    # ----------------------------------------------------------- doi lookup
-    def lookup_doi(self, doi: str, query_id: str = "doi-lookup") -> dict | None:
+    # --------------------------------------------------------------- lookups
+    def _lookup(self, params: dict, raw_name: str, querytext: str,
+                query_id: str) -> tuple[list[dict], int, Path]:
         """
-        Fetch one record by DOI (the API ignores every other search parameter
-        when `doi` is given). Returns the raw article dict or None if IEEE does
-        not index it. Costs one request; logged like any other.
+        One logged lookup request. The raw response is written to
+        data/raw/ieee/lookup/<raw_name>.json before it is parsed. Returns
+        (articles, total_records, raw_path).
         """
-        body, status = self._get({"doi": doi, "max_records": 1})
-        articles = body.get("articles", []) if status == 200 else []
+        body, status = self._get(params)
+        raw_dir = self.data_dir / "raw" / "ieee" / "lookup"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = raw_dir / f"{raw_name}.json"
+        raw_path.write_text(json.dumps(body, indent=1), encoding="utf-8")
+        articles = (body.get("articles") or []) if status == 200 else []
+        total = body.get("total_records", "") if status == 200 else ""
         self._log({
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "run_id": "lookup", "db": "ieee", "query_id": query_id, "content_type": "",
-            "start_record": 1, "max_records": 1, "returned": len(articles),
-            "total_records": body.get("total_records", "") if status == 200 else "",
-            "status": status, "querytext": f"doi={doi}",
+            "start_record": 1, "max_records": params.get("max_records", ""),
+            "returned": len(articles), "total_records": total,
+            "status": status, "querytext": querytext,
         })
         if status != 200:
-            raise RuntimeError(f"IEEE API returned {status} for doi={doi}: {body}")
+            raise RuntimeError(f"IEEE API returned {status} for {querytext}: {body}")
         time.sleep(self.sleep)
-        return articles[0] if articles else None
+        return articles, int(total or 0), raw_path
+
+    def lookup_doi(self, doi: str, query_id: str = "doi-lookup") -> dict | None:
+        """
+        Fetch one record by DOI (the API ignores every other search parameter
+        when `doi` is given). Returns the raw article dict, None if IEEE does
+        not index it, or the marker {"_status": "counted_not_returned",
+        "_raw": <path>} when IEEE counts a match (total_records >= 1) but
+        returns no article. Costs one request; logged like any other.
+        """
+        articles, total, raw_path = self._lookup(
+            {"doi": doi, "max_records": 1}, doi.replace("/", "_"), f"doi={doi}", query_id)
+        if articles:
+            return articles[0]
+        if total >= 1:
+            return {"_status": COUNTED_NOT_RETURNED, "_raw": str(raw_path)}
+        return None
 
     # --------------------------------------------------------------- search
     def search(self, query_id: str, params: dict, run_id: str | None = None,

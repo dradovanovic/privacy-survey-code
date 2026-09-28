@@ -244,7 +244,7 @@ def cmd_diagnose_seeds(args) -> int:
     'not in IEEE, expect it from another database' from 'in IEEE but missed
     by the query', which is the only kind of miss that should change the query.
     """
-    from .ieee_client import IEEEClient, load_api_key
+    from .ieee_client import COUNTED_NOT_RETURNED, IEEEClient, load_api_key
 
     query = qc.load_query(args.query)
     qid = query["query_id"]
@@ -274,6 +274,10 @@ def cmd_diagnose_seeds(args) -> int:
         if item is None:
             lines += [f"- **not indexed in IEEE Xplore** (doi {s['doi']}). Expect it from Scopus / WoS / ACM.", ""]
             verdicts["not in IEEE"] += 1
+            continue
+        if item.get("_status") == COUNTED_NOT_RETURNED:
+            lines += [f"- **counted by IEEE but no article returned** (doi {s['doi']}; raw: {item['_raw']}).", ""]
+            verdicts["in IEEE, not returned"] += 1
             continue
         r = rec.normalize_ieee(item, qid, "lookup", "lookup")
         gm = rec.group_matches(query, r, include_venue=True)

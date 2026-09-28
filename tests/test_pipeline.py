@@ -116,3 +116,33 @@ def test_semicolon_seed_format(tmp_path):
     hit = _rec("privacy aware smart metering a survey", doi="10.1109/surv.2014.052914.00090")
     report = rec.seed_recall(seeds, [hit])
     assert report["found"] == ["Finster14a"] and report["n_found"] == 1
+
+
+def _stub_client(tmp_path, responses):
+    """IEEEClient whose _get replays `responses` (list of (body, status)) in order."""
+    from survey_pipeline.ieee_client import IEEEClient
+    c = IEEEClient("test-key", data_dir=tmp_path, sleep_seconds=0)
+    queue = list(responses)
+    c.calls = []
+    def fake_get(params):
+        c.calls.append(params)
+        return queue.pop(0)
+    c._get = fake_get
+    return c
+
+
+def test_lookup_doi_saves_raw_and_flags_counted_not_returned(tmp_path):
+    from survey_pipeline.ieee_client import COUNTED_NOT_RETURNED
+    c = _stub_client(tmp_path, [
+        ({"total_records": 1, "articles": [{"doi": "10.1/a", "title": "A"}]}, 200),
+        ({"total_records": 1}, 200),
+        ({"total_records": 0}, 200),
+    ])
+    assert c.lookup_doi("10.1/a")["title"] == "A"
+    marker = c.lookup_doi("10.1/b")
+    assert marker["_status"] == COUNTED_NOT_RETURNED
+    assert Path(marker["_raw"]) == tmp_path / "raw" / "ieee" / "lookup" / "10.1_b.json"
+    assert json.loads(Path(marker["_raw"]).read_text(encoding="utf-8")) == {"total_records": 1}
+    assert c.lookup_doi("10.1/c") is None
+    assert (tmp_path / "raw" / "ieee" / "lookup" / "10.1_c.json").exists()
+    assert len((tmp_path / "runs.csv").read_text(encoding="utf-8").strip().splitlines()) == 4
