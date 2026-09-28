@@ -38,6 +38,36 @@ def _jsonl_read(path: Path) -> list[dict]:
         return [json.loads(line) for line in fh if line.strip()]
 
 
+def _load_normalized(data_dir: Path, qid: str) -> tuple[list[dict], set[str]]:
+    """All normalized rows for a query, and the dbs searched (one file per db)."""
+    rows: list[dict] = []
+    searched: set[str] = set()
+    for path in sorted((data_dir / "normalized").glob(f"{qid}.*.jsonl")):
+        rows += _jsonl_read(path)
+        searched.add(path.name[len(qid) + 1:-len(".jsonl")])
+    return rows, searched
+
+
+def _fmt_recall(found: int, evaluated: int, recall: float | None) -> str:
+    return f"{found}/{evaluated} seeds retrieved (recall = {recall:.2f})" if evaluated else "no seeds evaluated yet"
+
+
+def _seed_recall_lines(rep: dict) -> list[str]:
+    """Markdown lines: overall and per-source-db recall, missing and pending seeds."""
+    lines = [f"- overall: {_fmt_recall(rep['n_found'], rep['n_evaluated'], rep['recall'])}; "
+             f"{len(rep['pending'])} pending (source database not searched yet); "
+             f"{rep['n_seeds']} seeds; searched: {', '.join(rep['searched_dbs']) or '—'}"]
+    for db, d in sorted(rep["per_db"].items(), key=lambda kv: kv[0] or "~"):
+        n_eval = len(d["found"]) + len(d["missing"])
+        lines.append(f"- {db or 'untagged'}: {_fmt_recall(len(d['found']), n_eval, d['recall'])}"
+                     + (f"; {len(d['pending'])} pending" if d["pending"] else ""))
+    if rep["missing"]:
+        lines += ["- missing:"] + [f"    - {m}" for m in rep["missing"]]
+    if rep["pending"]:
+        lines += ["- pending:"] + [f"    - {m}" for m in rep["pending"]]
+    return lines
+
+
 def _jsonl_write(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as fh:
@@ -140,9 +170,7 @@ def cmd_summarize(args) -> int:
     query = qc.load_query(args.query)
     qid = query["query_id"]
     data_dir = Path(args.data_dir)
-    all_rows: list[dict] = []
-    for path in sorted((data_dir / "normalized").glob(f"{qid}.*.jsonl")):
-        all_rows += _jsonl_read(path)
+    all_rows, searched = _load_normalized(data_dir, qid)
     if not all_rows:
         print(f"no normalized records for {qid}; run `search` first", file=sys.stderr)
         return 2
@@ -174,7 +202,7 @@ def cmd_summarize(args) -> int:
         seed_path = Path(args.query).parent.parent / query["seed_set"]
         if seed_path.exists():
             seeds = rec.load_seed_set(seed_path, args.bib)
-            seed_report = rec.seed_recall(seeds, unique)
+            seed_report = rec.seed_recall(seeds, unique, searched)
 
     lines = [
         f"# Search report: `{qid}`", "",
@@ -198,11 +226,7 @@ def cmd_summarize(args) -> int:
         lines += ["", "## Sensitivity variants (unique records still matching)", ""]
         lines += [f"- {k}: {v}" for k, v in variant_counts.items()]
     if seed_report:
-        lines += ["", "## Seed recall", "",
-                  f"- {seed_report['n_found']}/{seed_report['n_seeds']} seeds retrieved "
-                  f"(recall = {seed_report['recall']:.2f})"]
-        if seed_report["missing"]:
-            lines += ["- missing:"] + [f"    - {m}" for m in seed_report["missing"]]
+        lines += ["", "## Seed recall", ""] + _seed_recall_lines(seed_report)
     text = "\n".join(lines)
     rep = data_dir / "reports" / f"{qid}.md"
     rep.parent.mkdir(parents=True, exist_ok=True)
@@ -254,18 +278,18 @@ def cmd_diagnose_seeds(args) -> int:
     data_dir = Path(args.data_dir)
     seed_path = Path(args.query).parent.parent / query["seed_set"]
     seeds = rec.load_seed_set(seed_path, args.bib)
-    rows: list[dict] = []
-    for path in sorted((data_dir / "normalized").glob(f"{qid}.*.jsonl")):
-        rows += _jsonl_read(path)
+    rows, searched = _load_normalized(data_dir, qid)
     unique, _ = rec.dedupe(rows)
-    report = rec.seed_recall(seeds, unique)
+    report = rec.seed_recall(seeds, unique, searched)
     missing = [s for s in seeds if s["id"] in report["missing"]]
 
     client = IEEEClient(load_api_key(), data_dir=args.data_dir)
     filters = query.get("filters", {})
     allowed_ct = set(filters.get("content_types", {}).get("ieee", []))
     lines = [f"# Seed diagnosis: `{qid}`", "",
-             f"retrieved {report['n_found']}/{report['n_seeds']} seeds; diagnosing {len(missing)} missing", ""]
+             f"retrieved {report['n_found']}/{report['n_evaluated']} evaluated seeds; "
+             f"{len(report['pending'])} pending (source database not searched yet); "
+             f"diagnosing {len(missing)} missing", ""]
     verdicts = collections.Counter()
     for s in missing:
         lines.append(f"## {s['id']}  —  {s.get('title') or ''}")

@@ -217,12 +217,13 @@ def load_bib_entries(bib_path: str | Path) -> list[dict]:
 def load_seed_set(path: str | Path, bib_path: str | Path | None = None) -> list[dict]:
     """
     seeds/<stream>_seeds.txt lines are one of
-        Title;DOI;BibKey                  (semicolon format; DOI or BibKey may be empty)
+        Title;DOI;BibKey[;source_db]      (semicolon format; DOI or BibKey may be empty)
         doi:10.1109/...
         key:BibKey2021                    (resolved through the .bib)
         title:Exact or near-exact title
     Blank lines and '#' comments are ignored. The seed id is the BibKey when
-    present, else the DOI, else the title.
+    present, else the DOI, else the title. source_db (lower-case, e.g. ieee,
+    scopus) names the database the seed is expected from; None when absent.
     """
     bib = {e["key"]: e for e in load_bib_entries(bib_path)} if bib_path else {}
     seeds = []
@@ -237,36 +238,62 @@ def load_seed_set(path: str | Path, bib_path: str | Path | None = None) -> list[
             key = parts[2] if len(parts) > 2 and parts[2] else None
             if key and key in bib and not doi:
                 doi = bib[key]["doi"]
-            seeds.append({"id": key or doi or title, "doi": doi, "title": title, "key": key})
+            source_db = parts[3].lower() if len(parts) > 3 and parts[3] else None
+            seeds.append({"id": key or doi or title, "doi": doi, "title": title, "key": key,
+                          "source_db": source_db})
             continue
         kind, _, value = line.partition(":")
         kind, value = kind.strip().lower(), value.strip()
         if kind == "doi":
-            seeds.append({"id": line, "doi": _clean_doi(value), "title": ""})
+            seeds.append({"id": line, "doi": _clean_doi(value), "title": "", "source_db": None})
         elif kind == "key":
             e = bib.get(value)
             if e is None:
                 raise KeyError(f"seed key '{value}' not found in {bib_path}")
-            seeds.append({"id": line, "doi": e["doi"], "title": e["title"]})
+            seeds.append({"id": line, "doi": e["doi"], "title": e["title"], "source_db": None})
         elif kind == "title":
-            seeds.append({"id": line, "doi": None, "title": value})
+            seeds.append({"id": line, "doi": None, "title": value, "source_db": None})
         else:
             raise ValueError(f"unrecognised seed line: {line}")
     return seeds
 
 
-def seed_recall(seeds: list[dict], records: list[dict]) -> dict:
-    """Which seeds were retrieved (by DOI, else by normalized title)."""
+def _recall(found: list, missing: list) -> float | None:
+    n = len(found) + len(missing)
+    return len(found) / n if n else None
+
+
+def seed_recall(seeds: list[dict], records: list[dict],
+                searched_dbs: Iterable[str] | None = None) -> dict:
+    """
+    Which seeds were retrieved (by DOI, else by normalized title). A seed that
+    was not retrieved and whose source_db is not in `searched_dbs` (default:
+    the dbs of `records`) is "pending", not missed; recall is computed over
+    found + missing only. A seed without source_db is always evaluated.
+    `per_db` holds the same split per source_db (None key for untagged seeds).
+    """
+    searched = {d.lower() for d in (searched_dbs if searched_dbs is not None
+                                    else (r["db"] for r in records))}
     dois = {r["doi"] for r in records if r.get("doi")}
     titles = {title_key(r["title"]) for r in records}
-    found, missing = [], []
+    found, missing, pending = [], [], []
+    per_db: dict[str | None, dict] = {}
     for s in seeds:
         hit = (s["doi"] and s["doi"] in dois) or (s["title"] and title_key(s["title"]) in titles)
-        (found if hit else missing).append(s["id"])
+        db = s.get("source_db")
+        bucket = "found" if hit else ("pending" if db and db not in searched else "missing")
+        {"found": found, "missing": missing, "pending": pending}[bucket].append(s["id"])
+        per_db.setdefault(db, {"found": [], "missing": [], "pending": []})[bucket].append(s["id"])
+    for d in per_db.values():
+        d["recall"] = _recall(d["found"], d["missing"])
     return {
         "n_seeds": len(seeds),
         "n_found": len(found),
-        "recall": (len(found) / len(seeds)) if seeds else None,
+        "n_evaluated": len(found) + len(missing),
+        "recall": _recall(found, missing),
         "found": found,
         "missing": missing,
+        "pending": pending,
+        "searched_dbs": sorted(searched),
+        "per_db": per_db,
     }

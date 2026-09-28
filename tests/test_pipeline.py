@@ -209,3 +209,49 @@ def test_lookup_command_prints_raw_json(tmp_path, monkeypatch, capsys):
     assert "manual-lookup" in (tmp_path / "runs.csv").read_text(encoding="utf-8")
     with pytest.raises(SystemExit):
         main(["--data-dir", str(tmp_path), "lookup", "--doi", "x", "--title", "y"])
+
+
+def test_seed_recall_per_source_db_with_pending(tmp_path):
+    f = tmp_path / "seeds.txt"
+    f.write_text(
+        "Found in IEEE;10.1/a;A1;ieee\n"
+        "Missed in IEEE;10.1/b;B1;IEEE\n"
+        "Scopus only;10.1/c;C1;scopus\n"
+        "Scopus but found via IEEE;10.1/d;D1;scopus\n"
+        "Untagged;10.1/e;E1\n"
+    )
+    seeds = rec.load_seed_set(f)
+    assert [s["source_db"] for s in seeds] == ["ieee", "ieee", "scopus", "scopus", None]
+    records = [_rec("x", doi="10.1/a", rid="ieee:1"), _rec("y", doi="10.1/d", rid="ieee:2")]
+    r = rec.seed_recall(seeds, records)
+    assert r["searched_dbs"] == ["ieee"]
+    assert r["found"] == ["A1", "D1"] and r["missing"] == ["B1", "E1"] and r["pending"] == ["C1"]
+    assert r["n_evaluated"] == 4 and r["recall"] == 0.5
+    assert r["per_db"]["ieee"]["recall"] == 0.5
+    assert r["per_db"]["scopus"]["found"] == ["D1"] and r["per_db"]["scopus"]["pending"] == ["C1"]
+    assert r["per_db"]["scopus"]["recall"] == 1.0
+    assert r["per_db"][None]["missing"] == ["E1"]
+    # once scopus is searched, C1 counts as missed
+    r2 = rec.seed_recall(seeds, records, searched_dbs=["ieee", "scopus"])
+    assert r2["pending"] == [] and "C1" in r2["missing"]
+
+
+def test_summarize_reports_recall_per_source_db(tmp_path):
+    q = json.loads(QUERY.read_text())
+    (tmp_path / "normalized").mkdir()
+    row = {"record_id": "ieee:1", "db": "ieee", "doi": "10.1/a", "title": "Smart meter privacy: a survey",
+           "abstract": "", "keywords": [], "year": 2020}
+    (tmp_path / "normalized" / f"{q['query_id']}.ieee.jsonl").write_text(json.dumps(row) + "\n")
+    seeds = tmp_path / "seeds" / "stream_a_seeds.txt"
+    seeds.parent.mkdir()
+    seeds.write_text("Smart meter privacy: a survey;10.1/a;A1;ieee\nOther;10.1/b;B1;ieee\nS;10.1/c;C1;scopus\n")
+    q["seed_set"] = "seeds/stream_a_seeds.txt"
+    qpath = tmp_path / "queries" / "q.json"
+    qpath.parent.mkdir()
+    qpath.write_text(json.dumps(q))
+    assert main(["--data-dir", str(tmp_path), "summarize", str(qpath)]) == 0
+    report = (tmp_path / "reports" / f"{q['query_id']}.md").read_text(encoding="utf-8")
+    assert "- overall: 1/2 seeds retrieved (recall = 0.50); 1 pending" in report
+    assert "- ieee: 1/2 seeds retrieved (recall = 0.50)" in report
+    assert "- scopus: no seeds evaluated yet; 1 pending" in report
+    assert "- pending:\n    - C1" in report
