@@ -381,3 +381,31 @@ def test_normalize_openalex():
     bare = rec.normalize_openalex({"id": "https://openalex.org/W1", "primary_location": None,
                                    "abstract_inverted_index": None}, "q", "run", "raw.json")
     assert bare["abstract"] == "" and bare["venue"] is None and bare["doi"] is None
+
+
+def test_openalex_search_dry_run_reports_total_first_and_full_run_normalizes(tmp_path, monkeypatch, capsys):
+    from survey_pipeline import openalex_client
+    w2 = {**OPENALEX_WORK, "id": "https://openalex.org/W456", "doi": None}
+    pages = [
+        ({"meta": {"count": 2, "next_cursor": "N1"}, "results": [OPENALEX_WORK]}, 200),   # dry run
+        ({"meta": {"count": 2, "next_cursor": "N1"}, "results": [OPENALEX_WORK]}, 200),   # full run p1
+        ({"meta": {"count": 2, "next_cursor": None}, "results": [w2]}, 200),              # full run p2
+    ]
+    calls = []
+    def fake_get(self, params):
+        calls.append(params)
+        return pages.pop(0)
+    monkeypatch.setattr(openalex_client.OpenAlexClient, "_get", fake_get)
+    monkeypatch.setattr(openalex_client, "load_api_key", lambda: "k")
+    monkeypatch.setattr(openalex_client.time, "sleep", lambda s: None)
+
+    assert main(["--data-dir", str(tmp_path), "search", str(QUERY), "--db", "openalex", "--dry-run"]) == 0
+    out = capsys.readouterr().out.splitlines()
+    assert out[1] == "TOTAL RESULTS: 2  (sum of total_records across content types)"
+    assert not (tmp_path / "normalized").exists()
+    assert main(["--data-dir", str(tmp_path), "search", str(QUERY), "--db", "openalex"]) == 0
+    assert [c["cursor"] for c in calls] == ["*", "*", "N1"] and calls[0]["per-page"] == 100
+    assert calls[0]["filter"].startswith("title_and_abstract.search:(")
+    rows = [json.loads(l) for l in (tmp_path / "normalized" / "stream-a-v1.openalex.jsonl").read_text().splitlines()]
+    assert [r["record_id"] for r in rows] == ["openalex:W123", "openalex:W456"]
+    assert "Bearer" not in (tmp_path / "runs.csv").read_text()

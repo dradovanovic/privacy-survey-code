@@ -4,7 +4,8 @@ survey_pipeline command line.
     python -m survey_pipeline.cli compile   queries/stream_a_v1.json [--db all]
     python -m survey_pipeline.cli search    queries/stream_a_v1.json --db ieee [--dry-run] [--max-pages N]
     python -m survey_pipeline.cli search    queries/stream_a_v1.json --db scopus [--dry-run] [--view COMPLETE|STANDARD]
-    python -m survey_pipeline.cli normalize queries/stream_a_v1.json --db ieee|scopus --run-id 2026...Z
+    python -m survey_pipeline.cli search    queries/stream_a_v1.json --db openalex [--dry-run]
+    python -m survey_pipeline.cli normalize queries/stream_a_v1.json --db ieee|scopus|openalex --run-id 2026...Z
     python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib /paper/bibliography.bib]
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
     python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
@@ -109,7 +110,7 @@ def cmd_compile(args) -> int:
 # search / normalize
 # ----------------------------------------------------------------------------
 
-API_DBS = ("ieee", "scopus")   # databases wired to an API; the others are compile-only
+API_DBS = ("ieee", "scopus", "openalex")   # databases wired to an API; the others are compile-only
 
 
 def _page_fns(db: str):
@@ -117,6 +118,9 @@ def _page_fns(db: str):
     if db == "ieee":
         from .ieee_client import page_items
         return page_items, rec.normalize_ieee
+    if db == "openalex":
+        from .openalex_client import page_items
+        return page_items, rec.normalize_openalex
     from .scopus_client import page_items
     return page_items, rec.normalize_scopus
 
@@ -137,6 +141,9 @@ def _client(db: str, args, query: dict):
     if db == "ieee":
         from .ieee_client import IEEEClient, load_api_key, page_total
         return IEEEClient(load_api_key(), data_dir=args.data_dir, sleep_seconds=sleep), page_total
+    if db == "openalex":
+        from .openalex_client import OpenAlexClient, load_api_key, page_total
+        return OpenAlexClient(load_api_key(), data_dir=args.data_dir, sleep_seconds=sleep), page_total
     from .scopus_client import ScopusClient, load_api_keys, page_total
     key, token = load_api_keys()
     return ScopusClient(key, token, data_dir=args.data_dir, view=args.view,
@@ -158,15 +165,22 @@ def cmd_search(args) -> int:
     max_pages = 1 if args.dry_run else args.max_pages
     totals: dict[str, int] = {}
     print(f"run_id={run_id}  query_id={query['query_id']}  db={args.db}  dry_run={args.dry_run}")
-    print(cq.display, "\n")
+    pages = []
     for body, raw_path, ct in client.search(query["query_id"], cq.params, run_id=run_id, max_pages=max_pages):
         totals[ct] = page_total(body)
-        print(f"  {ct or 'all':<14} total_records={totals[ct]:>6}  returned={len(page_items(body)):>4}"
-              f"  cached -> {raw_path.name}")
-    print(f"\nsum of total_records across content types: {sum(totals.values())}")
+        pages.append(f"  {ct or 'all':<14} total_records={totals[ct]:>6}  returned={len(page_items(body)):>4}"
+                     f"  cached -> {raw_path.name}")
+        if not args.dry_run:
+            print(pages[-1])
     if args.dry_run:
-        print("dry run: one page per content type retrieved; rerun without --dry-run to fetch all pages")
+        print(f"TOTAL RESULTS: {sum(totals.values())}  (sum of total_records across content types)\n")
+        print("\n".join(pages), "\n")
+        print(cq.display)
+        for n in cq.notes:
+            print(f"- note: {n}")
+        print("\ndry run: one page per content type retrieved; rerun without --dry-run to fetch all pages")
         return 0
+    print(f"\nsum of total_records across content types: {sum(totals.values())}")
     run_dir = Path(args.data_dir) / "raw" / args.db / query["query_id"] / run_id
     rows = _normalize_run(args.db, query["query_id"], run_dir, run_id)
     out = Path(args.data_dir) / "normalized" / f"{query['query_id']}.{args.db}.jsonl"
