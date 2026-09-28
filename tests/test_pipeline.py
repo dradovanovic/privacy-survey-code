@@ -13,7 +13,7 @@ QUERY = Path(__file__).parent.parent / "queries" / "stream_a_v1.json"
 def test_compile_all_targets():
     q = qc.load_query(QUERY)
     out = qc.compile_all(q)
-    assert set(out) == {"ieee", "scopus", "wos", "acm"}
+    assert set(out) == {"ieee", "scopus", "wos", "acm", "openalex"}
     assert '"smart meter"' in out["ieee"].params["querytext"]
     assert "TITLE-ABS-KEY" in out["scopus"].display
     assert out["ieee"].params["max_records"] == 200
@@ -338,3 +338,20 @@ def test_scopus_start_offset_paging_is_default_without_inst_token(tmp_path, monk
     list(c.search("q", {"query": "TITLE-ABS-KEY(x)"}))
     assert [p["start"] for p in calls] == [0, 1] and all("cursor" not in p for p in calls)
     assert calls[0]["count"] == 25 and calls[0]["view"] == "STANDARD"
+
+
+def test_openalex_compiler_filters_and_url_limit():
+    q = qc.load_query(QUERY)
+    cq = qc.compile_openalex(q)
+    f = cq.params["filter"]
+    assert f.startswith('title_and_abstract.search:((survey OR review')
+    assert ',publication_year:2009-2026,language:en,type:article|review|conference-paper|book-chapter' in f
+    assert f.count(",") == 3                      # exactly four filters, no comma inside the search string
+    assert any("URL length" in n for n in cq.notes)
+    q["concept_groups"]["domain"]["terms"] += [f"long domain phrase number {i}" for i in range(120)]
+    with pytest.raises(qc.QueryValidationError, match="bytes"):
+        qc.compile_openalex(q)
+    q2 = qc.load_query(QUERY)
+    q2["concept_groups"]["domain"]["terms"].append("meters, smart")
+    with pytest.raises(qc.QueryValidationError, match="comma"):
+        qc.compile_openalex(q2)

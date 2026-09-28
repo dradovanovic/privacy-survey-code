@@ -13,6 +13,7 @@ ieee    IEEE Xplore Metadata API  (querytext + filter params)
 scopus  Scopus Search API         (TITLE-ABS-KEY / TITLE syntax)
 wos     Web of Science            (TS= / TI= advanced search, paste into UI or API)
 acm     ACM Digital Library       (bracket syntax for the advanced-search box)
+openalex OpenAlex works API       (filter=title_and_abstract.search boolean + filters)
 
 IEEE constraints encoded here (developer.ieee.org, "Search Parameters"):
 * at most two wildcard words per query, each with >= 3 leading characters
@@ -253,11 +254,67 @@ def compile_acm(query: dict) -> CompiledQuery:
     return CompiledQuery("acm", query["query_id"], q, {"query": q}, [note])
 
 
+# ----------------------------------------------------------------------------
+# OpenAlex (works endpoint, filter=title_and_abstract.search)
+# ----------------------------------------------------------------------------
+
+OPENALEX_BASE_URL = "https://api.openalex.org/works"
+OPENALEX_MAX_URL = 3500            # bytes; OpenAlex documents ~4 KB per request URL
+# Scopus doctypes -> OpenAlex work types (help.openalex.org/data/work-types/)
+OPENALEX_TYPES = {"ar": "article", "re": "review", "cp": "conference-paper", "ch": "book-chapter"}
+
+
+def compile_openalex(query: dict) -> CompiledQuery:
+    """
+    One boolean string in filter=title_and_abstract.search:(...), ANDed with
+    publication_year, language and type filters. OpenAlex searches title and
+    abstract only (no keyword field) and stems quoted phrases too. A comma
+    separates filters, so the boolean string must not contain one. Fails when
+    the request URL (without the API key, which travels in a header) exceeds
+    OPENALEX_MAX_URL.
+    """
+    from urllib.parse import urlencode
+
+    clauses = [f"({_join(_terms(g), _operator(g))})" for g in query["concept_groups"].values()]
+    gop = query.get("group_operator", "AND").upper()
+    boolean = f" {gop} ".join(clauses)
+    excl = query.get("exclusion_terms") or []
+    if excl:
+        boolean = f"({boolean}) NOT ({_join(excl, 'OR')})"
+    if "," in boolean:
+        raise QueryValidationError("OpenAlex: a comma inside the search string would split the filter")
+
+    parts = [f"title_and_abstract.search:({boolean})"]
+    filters = query.get("filters", {})
+    if "start_year" in filters or "end_year" in filters:
+        parts.append(f"publication_year:{filters.get('start_year', '')}-{filters.get('end_year', '')}")
+    langs = [{"english": "en"}.get(l.lower(), l.lower()) for l in filters.get("languages", [])]
+    if langs:
+        parts.append("language:" + "|".join(langs))
+    ct = filters.get("content_types", {})
+    types = ct.get("openalex") or [OPENALEX_TYPES[d] for d in ct.get("scopus_doctypes", []) if d in OPENALEX_TYPES]
+    if types:
+        parts.append("type:" + "|".join(types))
+    flt = ",".join(parts)
+
+    url = f"{OPENALEX_BASE_URL}?{urlencode({'filter': flt})}"
+    n = len(url.encode("utf-8"))
+    if n > OPENALEX_MAX_URL:
+        raise QueryValidationError(f"OpenAlex request URL is {n} bytes (limit {OPENALEX_MAX_URL}); split the query")
+    notes = [f"request URL length: {n} bytes (limit {OPENALEX_MAX_URL}; API key sent as a header)",
+             "searches title and abstract only; keywords are not searchable in OpenAlex",
+             "quoted phrases are stemmed as well (OpenAlex search semantics)"]
+    if not ct.get("openalex"):
+        notes.append(f"types derived from scopus_doctypes: {'|'.join(types)}")
+    return CompiledQuery("openalex", query["query_id"], flt, {"filter": flt}, notes)
+
+
 COMPILERS = {
     "ieee": compile_ieee,
     "scopus": compile_scopus,
     "wos": compile_wos,
     "acm": compile_acm,
+    "openalex": compile_openalex,
 }
 
 
