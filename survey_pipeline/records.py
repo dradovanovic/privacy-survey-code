@@ -79,6 +79,44 @@ def normalize_ieee(item: dict, query_id: str, run_id: str, raw_path: str) -> dic
     }
 
 
+def normalize_scopus(item: dict, query_id: str, run_id: str, raw_path: str) -> dict:
+    """
+    Map one element of the Scopus Search API 'entry' array to the unified
+    schema. Abstract (dc:description), author keywords and the full author
+    list are present only in view=COMPLETE; STANDARD gives the first author.
+    """
+    if item.get("author"):
+        authors = [a.get("authname", "") for a in item["author"]]
+    else:
+        authors = [item["dc:creator"]] if item.get("dc:creator") else []
+    keywords = [k.strip() for k in (item.get("authkeywords") or "").split("|") if k.strip()]
+    date = item.get("prism:coverDate") or ""
+    year = int(date[:4]) if date[:4].isdigit() else None
+    try:
+        cited = int(item.get("citedby-count")) if item.get("citedby-count") not in (None, "") else None
+    except (TypeError, ValueError):
+        cited = None
+    url = next((l.get("@href") for l in item.get("link") or [] if l.get("@ref") == "scopus"), None)
+    return {
+        "record_id": f"scopus:{item.get('eid')}",
+        "db": "scopus",
+        "query_id": query_id,
+        "run_id": run_id,
+        "doi": _clean_doi(item.get("prism:doi")),
+        "title": (item.get("dc:title") or "").strip(),
+        "abstract": (item.get("dc:description") or "").strip(),
+        "year": year,
+        "venue": item.get("prism:publicationName"),
+        "content_type": item.get("subtypeDescription"),
+        "authors": authors,
+        "keywords": keywords,
+        "citing_count": cited,
+        "url": url,
+        "pdf_url": None,
+        "raw_path": raw_path,
+    }
+
+
 # ----------------------------------------------------------------------------
 # Local evaluation of a query against a record
 # ----------------------------------------------------------------------------

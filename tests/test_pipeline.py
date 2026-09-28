@@ -265,3 +265,56 @@ def test_seed_note_field_may_contain_semicolons(tmp_path):
     assert seeds[0]["note"] == "metadata-unreachable; expected via snowballing"
     assert seeds[1]["note"] is None
     assert rec.seed_recall(seeds, [], searched_dbs=["ieee"])["pending"] == ["K1"]
+
+
+SCOPUS_ENTRY = {
+    "eid": "2-s2.0-1", "prism:doi": "10.3390/EN15197419", "dc:title": "Data Privacy Preservation in Smart Metering",
+    "dc:description": "We survey privacy in smart meters.", "prism:coverDate": "2022-10-10",
+    "prism:publicationName": "Energies", "subtypeDescription": "Review", "citedby-count": "12",
+    "authkeywords": "privacy | smart meter | ", "author": [{"authname": "Abdalzaher M."}],
+    "link": [{"@ref": "self", "@href": "https://api/x"}, {"@ref": "scopus", "@href": "https://scopus/x"}],
+}
+
+
+def test_normalize_scopus_complete_and_standard_views():
+    r = rec.normalize_scopus(SCOPUS_ENTRY, "q", "run", "raw.json")
+    assert r["record_id"] == "scopus:2-s2.0-1" and r["db"] == "scopus"
+    assert r["doi"] == "10.3390/en15197419" and r["year"] == 2022 and r["citing_count"] == 12
+    assert r["keywords"] == ["privacy", "smart meter"] and r["authors"] == ["Abdalzaher M."]
+    assert r["url"] == "https://scopus/x" and r["content_type"] == "Review"
+    std = {k: v for k, v in SCOPUS_ENTRY.items() if k not in ("dc:description", "authkeywords", "author")}
+    r2 = rec.normalize_scopus({**std, "dc:creator": "Abdalzaher M."}, "q", "run", "raw.json")
+    assert r2["abstract"] == "" and r2["keywords"] == [] and r2["authors"] == ["Abdalzaher M."]
+
+
+def test_scopus_search_cursor_pagination_raw_cache_and_normalize(tmp_path, monkeypatch):
+    from survey_pipeline import scopus_client
+    e2 = {**SCOPUS_ENTRY, "eid": "2-s2.0-2", "prism:doi": "10.1/two"}
+    pages = [
+        ({"search-results": {"opensearch:totalResults": "2", "cursor": {"@next": "C2"}, "entry": [SCOPUS_ENTRY]}}, 200),
+        ({"search-results": {"opensearch:totalResults": "2", "cursor": {"@next": "C3"}, "entry": [e2]}}, 200),
+    ]
+    calls = []
+    def fake_get(self, params):
+        calls.append(params)
+        return pages.pop(0)
+    monkeypatch.setattr(scopus_client.ScopusClient, "_get", fake_get)
+    monkeypatch.setattr(scopus_client, "load_api_keys", lambda: ("k", None))
+    monkeypatch.setattr(scopus_client.time, "sleep", lambda s: None)
+
+    assert main(["--data-dir", str(tmp_path), "search", str(QUERY), "--db", "scopus"]) == 0
+    assert [c["cursor"] for c in calls] == ["*", "C2"]
+    assert calls[0]["view"] == "COMPLETE" and calls[0]["count"] == 25
+    assert calls[0]["query"].startswith("TITLE-ABS-KEY(")
+    run_dirs = list((tmp_path / "raw" / "scopus" / "stream-a-v1").iterdir())
+    assert sorted(p.name for p in run_dirs[0].glob("*_p*.json")) == ["all_p001_s000000.json", "all_p002_s000001.json"]
+    rows = [json.loads(l) for l in (tmp_path / "normalized" / "stream-a-v1.scopus.jsonl").read_text().splitlines()]
+    assert [r["record_id"] for r in rows] == ["scopus:2-s2.0-1", "scopus:2-s2.0-2"]
+    log = (tmp_path / "runs.csv").read_text(encoding="utf-8").strip().splitlines()
+    assert len(log) == 3 and ",scopus," in log[1]
+
+
+def test_scopus_empty_result_entry_is_ignored():
+    from survey_pipeline.scopus_client import page_items, page_total
+    body = {"search-results": {"opensearch:totalResults": "0", "entry": [{"@_fa": "true", "error": "Result set was empty"}]}}
+    assert page_items(body) == [] and page_total(body) == 0

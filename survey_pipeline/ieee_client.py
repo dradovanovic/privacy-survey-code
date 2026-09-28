@@ -57,6 +57,14 @@ def new_run_id() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
+def page_total(body: dict) -> int:
+    return int(body.get("total_records") or 0)
+
+
+def page_items(body: dict) -> list[dict]:
+    return body.get("articles") or []
+
+
 class IEEEClient:
     def __init__(self, api_key: str, data_dir: str | Path = "data",
                  sleep_seconds: float = 1.0, timeout: int = 60, max_retries: int = 5):

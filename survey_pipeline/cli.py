@@ -3,7 +3,8 @@ survey_pipeline command line.
 
     python -m survey_pipeline.cli compile   queries/stream_a_v1.json [--db all]
     python -m survey_pipeline.cli search    queries/stream_a_v1.json --db ieee [--dry-run] [--max-pages N]
-    python -m survey_pipeline.cli normalize queries/stream_a_v1.json --db ieee --run-id 2026...Z
+    python -m survey_pipeline.cli search    queries/stream_a_v1.json --db scopus [--dry-run] [--view COMPLETE|STANDARD]
+    python -m survey_pipeline.cli normalize queries/stream_a_v1.json --db ieee|scopus --run-id 2026...Z
     python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib /paper/bibliography.bib]
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
     python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
@@ -108,54 +109,81 @@ def cmd_compile(args) -> int:
 # search / normalize
 # ----------------------------------------------------------------------------
 
-def _normalize_ieee_run(query_id: str, run_dir: Path, run_id: str) -> list[dict]:
+API_DBS = ("ieee", "scopus")   # databases wired to an API; the others are compile-only
+
+
+def _page_fns(db: str):
+    """(page_items, normalize) for a database."""
+    if db == "ieee":
+        from .ieee_client import page_items
+        return page_items, rec.normalize_ieee
+    from .scopus_client import page_items
+    return page_items, rec.normalize_scopus
+
+
+def _normalize_run(db: str, query_id: str, run_dir: Path, run_id: str) -> list[dict]:
+    page_items, normalize = _page_fns(db)
     rows = []
     for page in sorted(run_dir.glob("*_p*.json")):
         body = json.loads(page.read_text(encoding="utf-8"))
-        for item in body.get("articles", []):
-            rows.append(rec.normalize_ieee(item, query_id, run_id, str(page)))
+        for item in page_items(body):
+            rows.append(normalize(item, query_id, run_id, str(page)))
     return rows
 
 
+def _client(db: str, args, query: dict):
+    """(client, page_total) for a database."""
+    sleep = float(query.get("retrieval", {}).get("sleep_seconds", 1.0))
+    if db == "ieee":
+        from .ieee_client import IEEEClient, load_api_key, page_total
+        return IEEEClient(load_api_key(), data_dir=args.data_dir, sleep_seconds=sleep), page_total
+    from .scopus_client import ScopusClient, load_api_keys, page_total
+    key, token = load_api_keys()
+    return ScopusClient(key, token, data_dir=args.data_dir, view=args.view, sleep_seconds=sleep), page_total
+
+
 def cmd_search(args) -> int:
-    if args.db != "ieee":
-        print("only --db ieee is wired to an API in this kit; use `compile` for the others", file=sys.stderr)
+    if args.db not in API_DBS:
+        print(f"only --db {' / '.join(API_DBS)} are wired to an API; use `compile` for the others",
+              file=sys.stderr)
         return 2
-    from .ieee_client import IEEEClient, load_api_key, new_run_id
+    from .ieee_client import new_run_id
 
     query = qc.load_query(args.query)
-    cq = qc.compile_ieee(query)
-    client = IEEEClient(load_api_key(), data_dir=args.data_dir,
-                        sleep_seconds=float(query.get("retrieval", {}).get("sleep_seconds", 1.0)))
+    cq = qc.COMPILERS[args.db](query)
+    client, page_total = _client(args.db, args, query)
+    page_items, _ = _page_fns(args.db)
     run_id = new_run_id()
     max_pages = 1 if args.dry_run else args.max_pages
     totals: dict[str, int] = {}
-    n_items = 0
-    print(f"run_id={run_id}  query_id={query['query_id']}  dry_run={args.dry_run}")
+    print(f"run_id={run_id}  query_id={query['query_id']}  db={args.db}  dry_run={args.dry_run}")
     print(cq.display, "\n")
     for body, raw_path, ct in client.search(query["query_id"], cq.params, run_id=run_id, max_pages=max_pages):
-        totals[ct] = body.get("total_records", 0)
-        n_items += len(body.get("articles", []))
-        print(f"  {ct or 'all':<14} total_records={totals[ct]:>6}  cached -> {raw_path.name}")
+        totals[ct] = page_total(body)
+        print(f"  {ct or 'all':<14} total_records={totals[ct]:>6}  returned={len(page_items(body)):>4}"
+              f"  cached -> {raw_path.name}")
     print(f"\nsum of total_records across content types: {sum(totals.values())}")
     if args.dry_run:
         print("dry run: one page per content type retrieved; rerun without --dry-run to fetch all pages")
         return 0
-    run_dir = Path(args.data_dir) / "raw" / "ieee" / query["query_id"] / run_id
-    rows = _normalize_ieee_run(query["query_id"], run_dir, run_id)
-    out = Path(args.data_dir) / "normalized" / f"{query['query_id']}.ieee.jsonl"
+    run_dir = Path(args.data_dir) / "raw" / args.db / query["query_id"] / run_id
+    rows = _normalize_run(args.db, query["query_id"], run_dir, run_id)
+    out = Path(args.data_dir) / "normalized" / f"{query['query_id']}.{args.db}.jsonl"
     _jsonl_write(out, rows)
     print(f"normalized {len(rows)} records -> {out}")
     return 0
 
 
 def cmd_normalize(args) -> int:
+    if args.db not in API_DBS:
+        print(f"--db must be one of {API_DBS}", file=sys.stderr)
+        return 2
     query = qc.load_query(args.query)
     run_dir = Path(args.data_dir) / "raw" / args.db / query["query_id"] / args.run_id
     if not run_dir.exists():
         print(f"no such run: {run_dir}", file=sys.stderr)
         return 2
-    rows = _normalize_ieee_run(query["query_id"], run_dir, args.run_id)
+    rows = _normalize_run(args.db, query["query_id"], run_dir, args.run_id)
     out = Path(args.data_dir) / "normalized" / f"{query['query_id']}.{args.db}.jsonl"
     _jsonl_write(out, rows)
     print(f"normalized {len(rows)} records -> {out}")
@@ -374,6 +402,8 @@ def main(argv=None) -> int:
     s.set_defaults(fn=cmd_compile)
     s = sub.add_parser("search"); s.add_argument("query"); s.add_argument("--db", default="ieee")
     s.add_argument("--dry-run", action="store_true"); s.add_argument("--max-pages", type=int, default=None)
+    s.add_argument("--view", default="COMPLETE", choices=["COMPLETE", "STANDARD"],
+                   help="Scopus only: COMPLETE has abstracts/keywords (25/page), STANDARD does not (200/page)")
     s.set_defaults(fn=cmd_search)
     s = sub.add_parser("normalize"); s.add_argument("query"); s.add_argument("--db", default="ieee")
     s.add_argument("--run-id", required=True); s.set_defaults(fn=cmd_normalize)
