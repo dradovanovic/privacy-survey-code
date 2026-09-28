@@ -22,3 +22,5 @@ timestamp,run_id,db,query_id,content_type,start_record,max_records,returned,tota
 2026-09-28T08:51:49+00:00,lookup,ieee,stream-a-v1,,1,1,0,0,200,doi=10.3390/en14092733
 2026-09-28T08:51:50+00:00,lookup,ieee,stream-a-v1,,1,1,0,1,200,doi=10.1109/comst.2014.2320093
 2026-09-28T11:12:27+00:00,lookup,ieee,stream-a-v1,,1,5,1,1,200,"article_title=""Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures"""
+2026-09-28T11:41:23+00:00,lookup,ieee,stream-a-v1,,1,1,0,1,200,doi=10.1109/comst.2014.2320093
+2026-09-28T11:41:26+00:00,lookup,ieee,stream-a-v1,,1,5,1,1,200,"article_title=""Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures"""
