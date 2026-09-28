@@ -346,6 +346,21 @@ def _recall(found: list, missing: list) -> float | None:
     return len(found) / n if n else None
 
 
+def seed_hits_by_db(seeds: list[dict], records: list[dict]) -> dict[str, list[str]]:
+    """
+    For each database present in `records` (pass them before dedupe), the ids
+    of the seeds that database retrieved on its own, by DOI or normalized title.
+    """
+    hits: dict[str, list[str]] = {}
+    for db in sorted({r["db"] for r in records}):
+        rows = [r for r in records if r["db"] == db]
+        dois = {r["doi"] for r in rows if r.get("doi")}
+        titles = {title_key(r["title"]) for r in rows}
+        hits[db] = [s["id"] for s in seeds
+                    if (s["doi"] and s["doi"] in dois) or (s["title"] and title_key(s["title"]) in titles)]
+    return hits
+
+
 def seed_recall(seeds: list[dict], records: list[dict],
                 searched_dbs: Iterable[str] | None = None) -> dict:
     """

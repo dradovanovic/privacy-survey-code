@@ -409,3 +409,11 @@ def test_openalex_search_dry_run_reports_total_first_and_full_run_normalizes(tmp
     rows = [json.loads(l) for l in (tmp_path / "normalized" / "stream-a-v1.openalex.jsonl").read_text().splitlines()]
     assert [r["record_id"] for r in rows] == ["openalex:W123", "openalex:W456"]
     assert "Bearer" not in (tmp_path / "runs.csv").read_text()
+
+
+def test_seed_hits_by_db_counts_each_database_before_dedupe():
+    seeds = [{"id": "A", "doi": "10.1/a", "title": ""}, {"id": "B", "doi": None, "title": "Paper B"}]
+    rows = [{**_rec("x", doi="10.1/a", rid="ieee:1"), "db": "ieee"},
+            {**_rec("x", doi="10.1/a", rid="openalex:W1"), "db": "openalex"},
+            {**_rec("Paper B", rid="openalex:W2"), "db": "openalex"}]
+    assert rec.seed_hits_by_db(seeds, rows) == {"ieee": ["A"], "openalex": ["A", "B"]}

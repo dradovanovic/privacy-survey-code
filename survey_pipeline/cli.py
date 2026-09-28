@@ -270,7 +270,12 @@ def cmd_summarize(args) -> int:
         lines += [f"- {k}: {v}" for k, v in variant_counts.items()]
     if seed_report:
         lines += ["", "## Seed recall", ""] + _seed_recall_lines(seed_report)
-        notes = [(sd["id"], sd["note"]) for sd in seeds if sd.get("note")]
+        lines += ["", "Seeds retrieved by each searched database on its own (before dedupe; all seeds):", ""]
+        for db, hit in rec.seed_hits_by_db(seeds, all_rows).items():
+            miss = [sd["id"] for sd in seeds if sd["id"] not in hit]
+            lines.append(f"- {db}: {len(hit)}/{len(seeds)}; not retrieved: {', '.join(miss) or '—'}")
+        lines.append("")
+        notes =[(sd["id"], sd["note"]) for sd in seeds if sd.get("note")]
         if notes:
             lines += ["- seed notes:"] + [f"    - {i}: {n}" for i, n in notes]
     text = "\n".join(lines)
