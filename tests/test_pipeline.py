@@ -146,3 +146,20 @@ def test_lookup_doi_saves_raw_and_flags_counted_not_returned(tmp_path):
     assert c.lookup_doi("10.1/c") is None
     assert (tmp_path / "raw" / "ieee" / "lookup" / "10.1_c.json").exists()
     assert len((tmp_path / "runs.csv").read_text(encoding="utf-8").strip().splitlines()) == 4
+
+
+def test_lookup_title_matches_by_doi_or_normalized_title(tmp_path):
+    other = {"doi": "10.1/x", "title": "Something Else"}
+    hit = {"doi": "10.1/y", "title": "Survey in Smart Grid: Issues"}
+    c = _stub_client(tmp_path, [
+        ({"total_records": 2, "articles": [other, hit]}, 200),
+        ({"total_records": 1, "articles": [{"doi": "10.1/Z", "title": "Different wording"}]}, 200),
+        ({"total_records": 1, "articles": [other]}, 200),
+    ])
+    assert c.lookup_title("Survey in smart grid -- issues") == hit
+    assert c.calls[0]["article_title"] == '"Survey in smart grid -- issues"'
+    assert c.calls[0]["max_records"] == 5
+    assert c.lookup_title("No match here", doi="10.1/z")["doi"] == "10.1/Z"
+    assert c.lookup_title("No match here") is None
+    assert (tmp_path / "raw" / "ieee" / "lookup" / "title_nomatchhere.json").exists()
+    assert len((tmp_path / "runs.csv").read_text(encoding="utf-8").strip().splitlines()) == 4

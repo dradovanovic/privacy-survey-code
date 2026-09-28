@@ -27,6 +27,8 @@ from typing import Iterator
 
 import requests
 
+from .records import _clean_doi, title_key
+
 BASE_URL = "https://ieeexploreapi.ieee.org/api/v1/search/articles"
 RUN_LOG_HEADER = [
     "timestamp", "run_id", "db", "query_id", "content_type", "start_record",
@@ -135,6 +137,24 @@ class IEEEClient:
             return articles[0]
         if total >= 1:
             return {"_status": COUNTED_NOT_RETURNED, "_raw": str(raw_path)}
+        return None
+
+    def lookup_title(self, title: str, doi: str | None = None,
+                     query_id: str = "title-lookup") -> dict | None:
+        """
+        Fetch a record by exact title (article_title, quoted, max_records 5).
+        Returns the first article whose DOI equals `doi` or whose normalized
+        title equals the normalized `title`; None if no returned article
+        matches. Raw response saved and request logged like lookup_doi.
+        """
+        key = title_key(title)
+        articles, _, _ = self._lookup(
+            {"article_title": f'"{title}"', "max_records": 5}, f"title_{key[:120]}",
+            f'article_title="{title}"', query_id)
+        want_doi = _clean_doi(doi)
+        for a in articles:
+            if (want_doi and _clean_doi(a.get("doi")) == want_doi) or title_key(a.get("title", "")) == key:
+                return a
         return None
 
     # --------------------------------------------------------------- search
