@@ -302,7 +302,7 @@ def test_scopus_search_cursor_pagination_raw_cache_and_normalize(tmp_path, monke
     monkeypatch.setattr(scopus_client, "load_api_keys", lambda: ("k", None))
     monkeypatch.setattr(scopus_client.time, "sleep", lambda s: None)
 
-    assert main(["--data-dir", str(tmp_path), "search", str(QUERY), "--db", "scopus"]) == 0
+    assert main(["--data-dir", str(tmp_path), "search", str(QUERY), "--db", "scopus", "--paging", "cursor"]) == 0
     assert [c["cursor"] for c in calls] == ["*", "C2"]
     assert calls[0]["view"] == "COMPLETE" and calls[0]["count"] == 25
     assert calls[0]["query"].startswith("TITLE-ABS-KEY(")
@@ -318,3 +318,23 @@ def test_scopus_empty_result_entry_is_ignored():
     from survey_pipeline.scopus_client import page_items, page_total
     body = {"search-results": {"opensearch:totalResults": "0", "entry": [{"@_fa": "true", "error": "Result set was empty"}]}}
     assert page_items(body) == [] and page_total(body) == 0
+
+
+def test_scopus_start_offset_paging_is_default_without_inst_token(tmp_path, monkeypatch):
+    from survey_pipeline import scopus_client
+    e2 = {**SCOPUS_ENTRY, "eid": "2-s2.0-2"}
+    pages = [
+        ({"search-results": {"opensearch:totalResults": "2", "entry": [SCOPUS_ENTRY]}}, 200),
+        ({"search-results": {"opensearch:totalResults": "2", "entry": [e2]}}, 200),
+    ]
+    calls = []
+    def fake_get(self, params):
+        calls.append(params)
+        return pages.pop(0)
+    monkeypatch.setattr(scopus_client.ScopusClient, "_get", fake_get)
+    monkeypatch.setattr(scopus_client.time, "sleep", lambda s: None)
+    c = scopus_client.ScopusClient("k", None, data_dir=tmp_path, view="STANDARD")
+    assert c.paging == "start" and scopus_client.ScopusClient("k", "tok", data_dir=tmp_path).paging == "cursor"
+    list(c.search("q", {"query": "TITLE-ABS-KEY(x)"}))
+    assert [p["start"] for p in calls] == [0, 1] and all("cursor" not in p for p in calls)
+    assert calls[0]["count"] == 25 and calls[0]["view"] == "STANDARD"

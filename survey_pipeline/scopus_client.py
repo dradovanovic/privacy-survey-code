@@ -5,13 +5,17 @@ Design rules
 * Every raw page is written to disk before it is parsed (data/raw/scopus/
   <query_id>/<run_id>/), so a run can be re-normalized without spending quota.
 * The compiled TITLE-ABS-KEY string is sent unchanged as `query`.
-* Cursor pagination (cursor=* then cursor/@next), which is not capped at
-  5,000 results like start-offset pagination. The offset is still logged as
-  start_record so runs.csv reads like an IEEE run.
+* Pagination: cursor (cursor=* then cursor/@next; not capped, but refused
+  without entitlement: "Use of the cursor parameter is restricted") or
+  start-offset (start=0, 25, ...; capped at START_LIMIT results). Default:
+  cursor when SCOPUS_INST_TOKEN is set, start otherwise. The offset is logged
+  as start_record either way, so runs.csv reads like an IEEE run.
 * view=COMPLETE returns abstracts and author keywords (needed for screening)
-  but allows at most 25 records per page and needs institutional entitlement
-  (IP range or SCOPUS_INST_TOKEN); view=STANDARD allows 200 per page but has
-  no abstract.
+  and needs institutional entitlement (IP range or SCOPUS_INST_TOKEN);
+  view=STANDARD has no abstract. Page size defaults to 25, the maximum for a
+  key without a subscription (count=200 is refused with "Exceeds the
+  maximum number allowed for the service level"); STANDARD allows up to 200
+  with entitlement.
 * 429 / 5xx responses are retried with exponential backoff.
 * Every request is appended to data/runs.csv; opensearch:totalResults is the
   PRISMA "records identified" number.
@@ -35,6 +39,7 @@ from .ieee_client import RUN_LOG_HEADER, new_run_id  # noqa: F401  (re-exported 
 
 BASE_URL = "https://api.elsevier.com/content/search/scopus"
 MAX_PAGE = {"COMPLETE": 25, "STANDARD": 200}
+START_LIMIT = 5000   # start-offset pagination cannot go past this many results
 
 
 def load_api_keys() -> tuple[str, str | None]:
@@ -63,10 +68,14 @@ def page_items(body: dict) -> list[dict]:
 
 class ScopusClient:
     def __init__(self, api_key: str, inst_token: str | None = None, data_dir: str | Path = "data",
-                 view: str = "COMPLETE", sleep_seconds: float = 1.0, timeout: int = 60,
-                 max_retries: int = 5):
+                 view: str = "COMPLETE", page_size: int = 25, paging: str | None = None,
+                 sleep_seconds: float = 1.0, timeout: int = 60, max_retries: int = 5):
         if view not in MAX_PAGE:
             raise ValueError(f"view must be one of {sorted(MAX_PAGE)}")
+        self.paging = paging or ("cursor" if inst_token else "start")
+        if self.paging not in ("cursor", "start"):
+            raise ValueError("paging must be 'cursor' or 'start'")
+        self.page_size = min(page_size, MAX_PAGE[view])
         self.api_key = api_key
         self.inst_token = inst_token
         self.view = view
@@ -117,7 +126,7 @@ class ScopusClient:
         query string. max_pages=1 is a dry run that only measures totalResults.
         """
         run_id = run_id or new_run_id()
-        page_size = min(int(params.get("max_records", MAX_PAGE[self.view])), MAX_PAGE[self.view])
+        page_size = self.page_size
         base = {"query": params["query"], "view": self.view, "count": page_size}
         raw_dir = self.data_dir / "raw" / "scopus" / query_id / run_id
         raw_dir.mkdir(parents=True, exist_ok=True)
@@ -126,7 +135,8 @@ class ScopusClient:
         cursor, offset, page, total = "*", 0, 0, None
         while True:
             page += 1
-            body, status = self._get({**base, "cursor": cursor})
+            where = {"cursor": cursor} if self.paging == "cursor" else {"start": offset}
+            body, status = self._get({**base, **where})
             items = page_items(body) if status == 200 else []
             total = page_total(body) if status == 200 else total
             raw_path = raw_dir / f"all_p{page:03d}_s{offset:06d}.json"
@@ -139,12 +149,18 @@ class ScopusClient:
                 "status": status, "querytext": base["query"],
             })
             if status != 200:
-                raise RuntimeError(f"Scopus API returned {status} (view={self.view}): {body}")
+                raise RuntimeError(f"Scopus API returned {status} (view={self.view}, "
+                                   f"paging={self.paging}): {body}")
             yield body, raw_path, ""
             offset += len(items)
             nxt = body.get("search-results", {}).get("cursor", {}).get("@next")
-            if not items or not nxt or (total is not None and offset >= total):
+            if not items or (total is not None and offset >= total):
                 break
+            if self.paging == "cursor" and not nxt:
+                break
+            if self.paging == "start" and offset >= START_LIMIT:
+                raise RuntimeError(f"start-offset pagination stops at {START_LIMIT} of {total} results; "
+                                   "use cursor paging (needs SCOPUS_INST_TOKEN) or split the query")
             if max_pages and page >= max_pages:
                 break
             cursor = nxt

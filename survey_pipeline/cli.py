@@ -139,7 +139,8 @@ def _client(db: str, args, query: dict):
         return IEEEClient(load_api_key(), data_dir=args.data_dir, sleep_seconds=sleep), page_total
     from .scopus_client import ScopusClient, load_api_keys, page_total
     key, token = load_api_keys()
-    return ScopusClient(key, token, data_dir=args.data_dir, view=args.view, sleep_seconds=sleep), page_total
+    return ScopusClient(key, token, data_dir=args.data_dir, view=args.view,
+                        page_size=args.page_size, paging=args.paging, sleep_seconds=sleep), page_total
 
 
 def cmd_search(args) -> int:
@@ -403,7 +404,11 @@ def main(argv=None) -> int:
     s = sub.add_parser("search"); s.add_argument("query"); s.add_argument("--db", default="ieee")
     s.add_argument("--dry-run", action="store_true"); s.add_argument("--max-pages", type=int, default=None)
     s.add_argument("--view", default="COMPLETE", choices=["COMPLETE", "STANDARD"],
-                   help="Scopus only: COMPLETE has abstracts/keywords (25/page), STANDARD does not (200/page)")
+                   help="Scopus only: COMPLETE has abstracts/keywords (needs entitlement), STANDARD does not")
+    s.add_argument("--page-size", type=int, default=25,
+                   help="Scopus only: records per request (25 without a subscription; STANDARD up to 200)")
+    s.add_argument("--paging", choices=["cursor", "start"], default=None,
+                   help="Scopus only: default cursor with SCOPUS_INST_TOKEN, start otherwise")
     s.set_defaults(fn=cmd_search)
     s = sub.add_parser("normalize"); s.add_argument("query"); s.add_argument("--db", default="ieee")
     s.add_argument("--run-id", required=True); s.set_defaults(fn=cmd_normalize)
