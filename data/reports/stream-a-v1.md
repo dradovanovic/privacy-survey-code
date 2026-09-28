@@ -64,10 +64,13 @@
 
 ## Seed recall
 
-- 9/20 seeds retrieved (recall = 0.45)
+- overall: 9/10 seeds retrieved (recall = 0.90); 9 pending (source database not searched yet); 19 seeds; searched: ieee
+- ieee: 9/10 seeds retrieved (recall = 0.90)
+- scopus: no seeds evaluated yet; 9 pending
 - missing:
+    - Komninos14a
+- pending:
     - Mitra24a
-    - Tan17a
     - Abdalzaher22a
     - Bibi25a
     - Mohassel14a
@@ -76,4 +79,3 @@
     - Eskandarnia22a
     - Desai19a
     - Llaria21a
-    - Komninos14a

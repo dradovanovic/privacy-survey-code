@@ -1,20 +1,19 @@
-Privacy-Aware Smart Metering: A Survey;10.1109/SURV.2014.052914.00090;Finster14a
-Smart Meter Data Privacy: A Survey;10.1109/COMST.2017.2720195;Ashgar17a
-A Systematic Literature Review of Data Privacy Solutions for Smart Meter Technologies;10.1109/BigData52589.2021.9671814;Gross21a
-Smart Grid Security and Privacy: From Conventional to Machine Learning Issues (Threats and Countermeasures);10.1109/ACCESS.2022.3174259;Mirzaee22a
-Smart meter data analytics applications for secure, reliable and robust grid system: Survey and future directions;10.1016/j.energy.2023.129920;Mitra24a
-Review of Smart Meter Data Analytics: Applications, Methodologies, and Challenges;10.1109/TSG.2018.2818167;Wang19a
-Survey of Security Advances in Smart Grid: A Data Driven Approach;10.1109/COMST.2016.2616442;Tan17a
-Smart grid metering networks: A survey on security, privacy and open research issues;;Kumar19a
-Data Privacy Preservation and Security in Smart Metering Systems;10.3390/en15197419;Abdalzaher22a
-A comprehensive survey on privacy-preserving technologies for Smart Grids;10.1016/j.compeleceng.2025.110371;Bibi25a
-A survey on Advanced Metering Infrastructure;10.1016/j.ijepes.2014.06.025;Mohassel14a
-Cyber Security and Privacy Issues in Smart Grids;10.1109/SURV.2011.122111.00145;Liu12a
-Energy meters evolution in smart grids: A review;10.1016/j.jclepro.2019.01.229;Avancini19a
-Smart Electricity Meter Data Intelligence for Future Energy Systems: A Survey;10.1109/TII.2015.2414355;Alahakoon16a
-Data analytics in the electricity sector--A quantitative and qualitative literature review;10.1016/j.egyai.2020.100009;Scheidt20a
-Deep learning techniques for smart meter data analytics: A review;10.1007/s42979-022-01161-6;Eskandarnia22a
-A survey of privacy preserving schemes in IoE enabled Smart Grid Advanced Metering Infrastructure;10.1007/s10586-018-2820-9;Desai19a
-Intelligent Buildings in Smart Grids: A Survey on Security and Privacy Issues Related to Energy Management;10.3390/en14092733;Llaria21a
-Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures;10.1109/COMST.2014.2320093;Komninos14a
-Privacy-Preserving Data Aggregation in Smart Metering Systems: An Overview;10.1109/MSP.2012.2228343;Erkin13a
+Privacy-Aware Smart Metering: A Survey;10.1109/SURV.2014.052914.00090;Finster14a;ieee
+Smart Meter Data Privacy: A Survey;10.1109/COMST.2017.2720195;Ashgar17a;ieee
+A Systematic Literature Review of Data Privacy Solutions for Smart Meter Technologies;10.1109/BigData52589.2021.9671814;Gross21a;ieee
+Smart Grid Security and Privacy: From Conventional to Machine Learning Issues (Threats and Countermeasures);10.1109/ACCESS.2022.3174259;Mirzaee22a;ieee
+Smart meter data analytics applications for secure, reliable and robust grid system: Survey and future directions;10.1016/j.energy.2023.129920;Mitra24a;scopus
+Review of Smart Meter Data Analytics: Applications, Methodologies, and Challenges;10.1109/TSG.2018.2818167;Wang19a;ieee
+Smart grid metering networks: A survey on security, privacy and open research issues;;Kumar19a;ieee
+Data Privacy Preservation and Security in Smart Metering Systems;10.3390/en15197419;Abdalzaher22a;scopus
+A comprehensive survey on privacy-preserving technologies for Smart Grids;10.1016/j.compeleceng.2025.110371;Bibi25a;scopus
+A survey on Advanced Metering Infrastructure;10.1016/j.ijepes.2014.06.025;Mohassel14a;scopus
+Cyber Security and Privacy Issues in Smart Grids;10.1109/SURV.2011.122111.00145;Liu12a;ieee
+Energy meters evolution in smart grids: A review;10.1016/j.jclepro.2019.01.229;Avancini19a;scopus
+Smart Electricity Meter Data Intelligence for Future Energy Systems: A Survey;10.1109/TII.2015.2414355;Alahakoon16a;ieee
+Data analytics in the electricity sector--A quantitative and qualitative literature review;10.1016/j.egyai.2020.100009;Scheidt20a;scopus
+Deep learning techniques for smart meter data analytics: A review;10.1007/s42979-022-01161-6;Eskandarnia22a;scopus
+A survey of privacy preserving schemes in IoE enabled Smart Grid Advanced Metering Infrastructure;10.1007/s10586-018-2820-9;Desai19a;scopus
+Intelligent Buildings in Smart Grids: A Survey on Security and Privacy Issues Related to Energy Management;10.3390/en14092733;Llaria21a;scopus
+Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures;10.1109/COMST.2014.2320093;Komninos14a;ieee
+Privacy-Preserving Data Aggregation in Smart Metering Systems: An Overview;10.1109/MSP.2012.2228343;Erkin13a;ieee
