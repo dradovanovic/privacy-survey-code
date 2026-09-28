@@ -163,3 +163,36 @@ def test_lookup_title_matches_by_doi_or_normalized_title(tmp_path):
     assert c.lookup_title("No match here") is None
     assert (tmp_path / "raw" / "ieee" / "lookup" / "title_nomatchhere.json").exists()
     assert len((tmp_path / "runs.csv").read_text(encoding="utf-8").strip().splitlines()) == 4
+
+
+def test_diagnose_seeds_falls_back_to_title_lookup(tmp_path, monkeypatch):
+    from survey_pipeline import ieee_client
+    q = json.loads(QUERY.read_text())
+    (tmp_path / "normalized").mkdir()
+    (tmp_path / "normalized" / f"{q['query_id']}.ieee.jsonl").write_text("")
+    seeds = tmp_path / "seeds" / "stream_a_seeds.txt"
+    seeds.parent.mkdir()
+    seeds.write_text("Smart Home Security: A Survey;10.1109/COMST.1;Home14a\n")
+    q["seed_set"] = "seeds/stream_a_seeds.txt"
+    qpath = tmp_path / "queries" / "q.json"
+    qpath.parent.mkdir()
+    qpath.write_text(json.dumps(q))
+
+    article = {"doi": "10.1109/COMST.1", "title": "Smart Home Security: A Survey",
+               "abstract": "We survey attacks on smart home networks.", "publication_year": "2014",
+               "publication_title": "IEEE Communications Surveys & Tutorials", "content_type": "Journals"}
+    responses = [({"total_records": 1}, 200), ({"total_records": 1, "articles": [article]}, 200)]
+    calls = []
+    def fake_get(self, params):
+        calls.append(params)
+        return responses.pop(0)
+    monkeypatch.setattr(ieee_client.IEEEClient, "_get", fake_get)
+    monkeypatch.setattr(ieee_client, "load_api_key", lambda: "test-key")
+    monkeypatch.setattr(ieee_client.time, "sleep", lambda s: None)
+
+    assert main(["--data-dir", str(tmp_path), "diagnose-seeds", str(qpath)]) == 0
+    assert "doi" in calls[0] and "article_title" in calls[1]
+    report = (tmp_path / "reports" / f"{q['query_id']}.seeds.md").read_text(encoding="utf-8")
+    assert "falling back to exact-title lookup" in report
+    assert "in IEEE: 2014" in report
+    assert "not indexed in IEEE" not in report

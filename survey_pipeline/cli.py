@@ -239,7 +239,8 @@ def cmd_summarize(args) -> int:
 def cmd_diagnose_seeds(args) -> int:
     """
     For every seed that the query did not retrieve: look it up in IEEE by DOI
-    (one request each) and report whether it is indexed at all, which content
+    (one request each; a second, exact-title request when IEEE counts the DOI
+    but returns no article) and report whether it is indexed at all, which content
     type / year it has, and which concept groups fail on its metadata. Splits
     'not in IEEE, expect it from another database' from 'in IEEE but missed
     by the query', which is the only kind of miss that should change the query.
@@ -276,9 +277,14 @@ def cmd_diagnose_seeds(args) -> int:
             verdicts["not in IEEE"] += 1
             continue
         if item.get("_status") == COUNTED_NOT_RETURNED:
-            lines += [f"- **counted by IEEE but no article returned** (doi {s['doi']}; raw: {item['_raw']}).", ""]
-            verdicts["in IEEE, not returned"] += 1
-            continue
+            lines.append(f"- DOI lookup counted a match but returned no article (raw: {item['_raw']}); "
+                         "falling back to exact-title lookup")
+            item = client.lookup_title(s.get("title") or "", doi=s["doi"], query_id=qid) if s.get("title") else None
+            if item is None:
+                lines += ["- **in IEEE, but neither DOI nor title lookup returned the record**; "
+                          "check it in the Xplore web UI.", ""]
+                verdicts["in IEEE, not returned"] += 1
+                continue
         r = rec.normalize_ieee(item, qid, "lookup", "lookup")
         gm = rec.group_matches(query, r, include_venue=True)
         failed = [g for g, ok in gm.items() if not ok]
