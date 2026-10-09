@@ -9,7 +9,7 @@ Unified record schema shared by all databases, plus helpers to
 Record schema (one JSON object per line in data/normalized/<query_id>.jsonl)
 ----------------------------------------------------------------------------
 record_id      "<db>:<native id>"           e.g. "ieee:9123456"
-db             "ieee" | "scopus" | "wos" | "acm"
+db             "ieee" | "scopus" | "openalex" | "acm"
 query_id       query definition that retrieved it
 run_id         timestamped run folder under data/raw/
 doi            lower-case DOI or null

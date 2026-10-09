@@ -350,7 +350,7 @@ def cmd_diagnose_seeds(args) -> int:
             continue
         item = client.lookup_doi(s["doi"], query_id=qid)
         if item is None:
-            lines += [f"- **not indexed in IEEE Xplore** (doi {s['doi']}). Expect it from Scopus / WoS / ACM.", ""]
+            lines += [f"- **not indexed in IEEE Xplore** (doi {s['doi']}). Expect it from Scopus / OpenAlex / ACM.", ""]
             verdicts["not in IEEE"] += 1
             continue
         if item.get("_status") == COUNTED_NOT_RETURNED:

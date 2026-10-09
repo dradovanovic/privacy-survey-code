@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -13,10 +14,36 @@ QUERY = Path(__file__).parent.parent / "queries" / "stream_a_v1.json"
 def test_compile_all_targets():
     q = qc.load_query(QUERY)
     out = qc.compile_all(q)
-    assert set(out) == {"ieee", "scopus", "wos", "acm", "openalex"}
+    assert set(out) == {"ieee", "scopus", "acm", "openalex"}
     assert '"smart meter"' in out["ieee"].params["querytext"]
     assert "TITLE-ABS-KEY" in out["scopus"].display
     assert out["ieee"].params["max_records"] == 200
+
+
+COMPILED_A = QUERY.parent.parent / "data" / "compiled" / "stream-a-v1.md"
+
+
+def _compiled_block(path, db):
+    """The first code block under '## <db>' in a compiled-strings file."""
+    m = re.search(rf"^## {db}\n```\n(.*?)\n```", path.read_text(encoding="utf-8"), re.MULTILINE | re.DOTALL)
+    assert m, f"no '## {db}' code block in {path}"
+    return m.group(1)
+
+
+def test_compile_acm_matches_string_run_on_acm():
+    # The '## acm' string in data/compiled/stream-a-v1.md is the one run by hand on ACM DL (77 hits).
+    assert qc.compile_acm(qc.load_query(QUERY)).display == _compiled_block(COMPILED_A, "acm")
+
+
+def test_compile_acm_field_syntax_quoting_and_title_only_group():
+    q = {"query_id": "t", "stream": "A", "group_operator": "AND", "filters": {"start_year": 2009, "end_year": 2026},
+         "concept_groups": {"a": {"terms": ["survey", "state-of-the-art"], "fields": ["title"]},
+                            "b": ["smart meter", "AMI"]}}
+    cq = qc.compile_acm(q)
+    assert cq.display == ('Title:(survey OR "state-of-the-art") AND (Title:("smart meter" OR AMI) OR '
+                          'Abstract:("smart meter" OR AMI) OR Keyword:("smart meter" OR AMI))')
+    assert cq.notes == ["paste into ACM DL Advanced Search → Edit Query; collection: ACM Full-Text Collection; "
+                        "set publication date filter 2009–2026; no content-type filter"]
 
 
 def test_wildcard_limit_enforced():
@@ -61,7 +88,7 @@ def test_hyphen_and_space_forms_are_equivalent():
 def test_dedupe_by_doi_then_title():
     a = _rec("Same Title", doi="10.1/x", rid="ieee:1")
     b = _rec("Same Title", doi="10.1/X", rid="scopus:1")      # DOI case-insensitive
-    c = _rec("Same  title!", doi=None, rid="wos:1")            # title fallback
+    c = _rec("Same  title!", doi=None, rid="acm:1")            # title fallback
     d = _rec("Other", doi="10.1/y", rid="ieee:2")
     u, dropped = rec.dedupe([a, {**b, "doi": rec._clean_doi(b["doi"])}, c, d])
     assert [r["record_id"] for r in u] == ["ieee:1", "ieee:2"]

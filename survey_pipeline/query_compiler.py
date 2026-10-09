@@ -11,8 +11,7 @@ Supported targets
 -----------------
 ieee    IEEE Xplore Metadata API  (querytext + filter params)
 scopus  Scopus Search API         (TITLE-ABS-KEY / TITLE syntax)
-wos     Web of Science            (TS= / TI= advanced search, paste into UI or API)
-acm     ACM Digital Library       (bracket syntax for the advanced-search box)
+acm     ACM Digital Library       (Edit Query field syntax, run by hand in the web UI)
 openalex OpenAlex works API       (filter=title_and_abstract.search boolean + filters)
 
 IEEE constraints encoded here (developer.ieee.org, "Search Parameters"):
@@ -207,50 +206,32 @@ def compile_scopus(query: dict) -> CompiledQuery:
 
 
 # ----------------------------------------------------------------------------
-# Web of Science (advanced search)
-# ----------------------------------------------------------------------------
-
-def compile_wos(query: dict) -> CompiledQuery:
-    clauses = []
-    for name, group in query["concept_groups"].items():
-        terms, fields, op = _terms(group), set(_fields(group)), _operator(group)
-        tag = "TI" if fields == {"title"} else "TS"   # TS = topic (title, abstract, keywords)
-        clauses.append(f"{tag}=({_join(terms, op)})")
-    gop = query.get("group_operator", "AND").upper()
-    q = f" {gop} ".join(clauses)
-    excl = query.get("exclusion_terms") or []
-    if excl:
-        q = f"({q}) NOT TS=({_join(excl, 'OR')})"
-    filters = query.get("filters", {})
-    if "start_year" in filters or "end_year" in filters:
-        q += f" AND PY=({filters.get('start_year', 1900)}-{filters.get('end_year', 2100)})"
-    return CompiledQuery("wos", query["query_id"], q, {"query": q},
-                         ["paste into WoS Advanced Search; export as RIS/BibTeX with abstracts"])
-
-
-# ----------------------------------------------------------------------------
-# ACM Digital Library (advanced search box syntax)
+# ACM Digital Library (advanced search, Edit Query field syntax)
 # ----------------------------------------------------------------------------
 
 def compile_acm(query: dict) -> CompiledQuery:
-    def field_clause(fld: str, terms: list[str], op: str) -> str:
-        return "[" + f" {op} ".join(f"[{fld}: {t}]" for t in terms) + "]"
-
+    """
+    Field syntax for ACM DL Advanced Search → Edit Query: Field:(t1 OR "a phrase").
+    ACM has no combined title+abstract+keyword field, so each group is
+    (Title:(...) OR Abstract:(...) OR Keyword:(...)); a title-only group is
+    Title:(...). Phrases and hyphenated terms are quoted: unquoted, ACM reads
+    'smart meter' as smart AND meter and the '-' in 'state-of-the-art' as NOT.
+    The bracket form ACM displays ([Title: survey]) is not accepted as input.
+    """
     clauses = []
     for name, group in query["concept_groups"].items():
         terms, fields, op = _terms(group), set(_fields(group)), _operator(group)
+        inner = _join(terms, op)
         if fields == {"title"}:
-            clauses.append(field_clause("Title", terms, op))
+            clauses.append(f"Title:({inner})")
         else:
-            # ACM has no combined title+abstract+keyword field; OR the three.
-            parts = [field_clause(f, terms, op) for f in ("Title", "Abstract", "Keyword")]
-            clauses.append("[" + " OR ".join(parts) + "]")
+            clauses.append("(" + " OR ".join(f"{f}:({inner})" for f in ("Title", "Abstract", "Keyword")) + ")")
     gop = query.get("group_operator", "AND").upper()
     q = f" {gop} ".join(clauses)
     filters = query.get("filters", {})
-    note = "paste into ACM DL Advanced Search 'Search Within' box"
-    if "start_year" in filters:
-        note += f"; set publication date filter {filters.get('start_year')}–{filters.get('end_year', '')}"
+    note = (f"paste into ACM DL Advanced Search → Edit Query; collection: ACM Full-Text Collection; "
+            f"set publication date filter {filters.get('start_year', '')}–{filters.get('end_year', '')}; "
+            f"no content-type filter")
     return CompiledQuery("acm", query["query_id"], q, {"query": q}, [note])
 
 
@@ -312,7 +293,6 @@ def compile_openalex(query: dict) -> CompiledQuery:
 COMPILERS = {
     "ieee": compile_ieee,
     "scopus": compile_scopus,
-    "wos": compile_wos,
     "acm": compile_acm,
     "openalex": compile_openalex,
 }
