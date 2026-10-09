@@ -6,11 +6,11 @@ Smart meter data analytics applications for secure, reliable and robust grid sys
 Review of Smart Meter Data Analytics: Applications, Methodologies, and Challenges;10.1109/TSG.2018.2818167;Wang19a;ieee
 Smart grid metering networks: A survey on security, privacy and open research issues;;Kumar19a;ieee
 A comprehensive survey on privacy-preserving technologies for Smart Grids;10.1016/j.compeleceng.2025.110371;Bibi25a;scopus
-A survey on Advanced Metering Infrastructure;10.1016/j.ijepes.2014.06.025;Mohassel14a;scopus
+A survey on Advanced Metering Infrastructure;10.1016/j.ijepes.2014.06.025;Mohassel14a;snowballing;metadata-unreachable: in Scopus, but no privacy term in title, abstract (OpenAlex) or keywords (diagnose-seeds --db scopus, 2026-10-09); expected via snowballing; A-I3 satisfied by section 3.1 'End users privacy' (checked by hand 2026-10-09)
 Cyber Security and Privacy Issues in Smart Grids;10.1109/SURV.2011.122111.00145;Liu12a;ieee
 Smart Electricity Meter Data Intelligence for Future Energy Systems: A Survey;10.1109/TII.2015.2414355;Alahakoon16a;ieee
-Deep learning techniques for smart meter data analytics: A review;10.1007/s42979-022-01161-6;Eskandarnia22a;scopus
+Deep learning techniques for smart meter data analytics: A review;10.1007/s42979-022-01161-6;Eskandarnia22a;snowballing;metadata-unreachable: in Scopus, but no privacy term in title or keywords; abstract not checkable (none in OpenAlex) (diagnose-seeds --db scopus, 2026-10-09); expected via snowballing; A-I3 satisfied by the 'Security and Privacy' section (p. 9) and privacy concerns (p. 12) (checked by hand 2026-10-09)
 A survey of privacy preserving schemes in IoE enabled Smart Grid Advanced Metering Infrastructure;10.1007/s10586-018-2820-9;Desai19a;scopus
 Intelligent Buildings in Smart Grids: A Survey on Security and Privacy Issues Related to Energy Management;10.3390/en14092733;Llaria21a;scopus
-Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures;10.1109/COMST.2014.2320093;Komninos14a;snowballing;metadata-unreachable: in IEEE, but no privacy term in title/abstract and no index terms returned (stream-a-v1 diagnosis 2026-09-28); expected via snowballing; A-I3 satisfied by section 'Ensuring Confidentiality and Privacy' (to be verified as recovered by snowballing)
+Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures;10.1109/COMST.2014.2320093;Komninos14a;snowballing;metadata-unreachable: in IEEE, but no privacy term in title/abstract and no index terms returned (stream-a-v1 diagnosis 2026-09-28); expected via snowballing; A-I3 satisfied by section 'Ensuring Confidentiality and Privacy' (section confirmed by hand 2026-10-09; recovery by snowballing still to be verified)
 Privacy-Preserving Data Aggregation in Smart Metering Systems: An Overview;10.1109/MSP.2012.2228343;Erkin13a;ieee

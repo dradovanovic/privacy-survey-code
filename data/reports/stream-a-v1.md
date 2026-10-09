@@ -81,14 +81,13 @@
 
 ## Seed recall
 
-- overall: 13/15 seeds retrieved (recall = 0.87); 1 pending (source database not searched yet); 16 seeds; searched: acm, ieee, openalex, scopus
+- overall: 13/13 seeds retrieved (recall = 1.00); 3 pending (source database not searched yet); 16 seeds; searched: acm, ieee, openalex, scopus
 - ieee: 9/9 seeds retrieved (recall = 1.00)
-- scopus: 4/6 seeds retrieved (recall = 0.67)
-- snowballing: no seeds evaluated yet; 1 pending
-- missing:
+- scopus: 4/4 seeds retrieved (recall = 1.00)
+- snowballing: no seeds evaluated yet; 3 pending
+- pending:
     - Mohassel14a
     - Eskandarnia22a
-- pending:
     - Komninos14a
 
 Seeds retrieved by each searched database on its own (before dedupe; all seeds):
@@ -99,4 +98,6 @@ Seeds retrieved by each searched database on its own (before dedupe; all seeds):
 - scopus: 13/16; not retrieved: Mohassel14a, Eskandarnia22a, Komninos14a
 
 - seed notes:
-    - Komninos14a: metadata-unreachable: in IEEE, but no privacy term in title/abstract and no index terms returned (stream-a-v1 diagnosis 2026-09-28); expected via snowballing; A-I3 satisfied by section 'Ensuring Confidentiality and Privacy' (to be verified as recovered by snowballing)
+    - Mohassel14a: metadata-unreachable: in Scopus, but no privacy term in title, abstract (OpenAlex) or keywords (diagnose-seeds --db scopus, 2026-10-09); expected via snowballing; A-I3 satisfied by section 3.1 'End users privacy' (checked by hand 2026-10-09)
+    - Eskandarnia22a: metadata-unreachable: in Scopus, but no privacy term in title or keywords; abstract not checkable (none in OpenAlex) (diagnose-seeds --db scopus, 2026-10-09); expected via snowballing; A-I3 satisfied by the 'Security and Privacy' section (p. 9) and privacy concerns (p. 12) (checked by hand 2026-10-09)
+    - Komninos14a: metadata-unreachable: in IEEE, but no privacy term in title/abstract and no index terms returned (stream-a-v1 diagnosis 2026-09-28); expected via snowballing; A-I3 satisfied by section 'Ensuring Confidentiality and Privacy' (section confirmed by hand 2026-10-09; recovery by snowballing still to be verified)
