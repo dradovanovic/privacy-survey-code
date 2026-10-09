@@ -1,6 +1,7 @@
 """
 Unified record schema shared by all databases, plus helpers to
-* normalize raw IEEE API items into that schema,
+* normalize raw API items (IEEE, Scopus, OpenAlex) and ACM DL BibTeX
+  exports into that schema,
 * evaluate a query definition locally against a record (used for
   sensitivity variants and for checking that the API honoured the query),
 * deduplicate across databases,
@@ -112,6 +113,98 @@ def normalize_scopus(item: dict, query_id: str, run_id: str, raw_path: str) -> d
         "keywords": keywords,
         "citing_count": cited,
         "url": url,
+        "pdf_url": None,
+        "raw_path": raw_path,
+    }
+
+
+_BIB_START = re.compile(r"@\s*(\w+)\s*\{")
+_BIB_NAME = re.compile(r"[\s,]*([A-Za-z][\w\-:.]*)\s*=\s*")
+
+
+def _bib_braced(text: str, start: int) -> int:
+    """Index of the '}' that closes the '{' at text[start]."""
+    depth = 0
+    for i in range(start, len(text)):
+        if text[i] == "{" and text[i - 1:i] != "\\":
+            depth += 1
+        elif text[i] == "}" and text[i - 1:i] != "\\":
+            depth -= 1
+            if depth == 0:
+                return i
+    return len(text)
+
+
+def parse_bibtex(text: str) -> list[dict]:
+    """
+    Brace-balanced BibTeX reader for database exports (ACM DL abstracts can
+    nest braces deeper than load_bib_entries handles). Returns
+    [{"_type", "_key", <lower-case field>: raw value}]; @comment, @string
+    and @preamble blocks are skipped.
+    """
+    entries = []
+    pos = 0
+    while m := _BIB_START.search(text, pos):
+        end = _bib_braced(text, m.end() - 1)
+        pos = end + 1
+        etype = m.group(1).lower()
+        if etype in ("comment", "string", "preamble"):
+            continue
+        body = text[m.end():end]
+        key, _, rest = body.partition(",")
+        fields: dict = {"_type": etype, "_key": key.strip()}
+        i = 0
+        while f := _BIB_NAME.match(rest, i):
+            i = f.end()
+            if rest[i:i + 1] == "{":
+                j = _bib_braced(rest, i)
+                value, i = rest[i + 1:j], j + 1
+            elif rest[i:i + 1] == '"':
+                j = rest.find('"', i + 1)
+                j = len(rest) if j == -1 else j
+                value, i = rest[i + 1:j], j + 1
+            else:
+                j = rest.find(",", i)
+                j = len(rest) if j == -1 else j
+                value, i = rest[i:j].strip(), j
+            fields[f.group(1).lower()] = value
+        entries.append(fields)
+    return entries
+
+
+def _bib_plain(value: str | None) -> str:
+    """Drop BibTeX grouping braces and common escapes; collapse whitespace."""
+    value = re.sub(r"\\([&%_$#{}])", r"\1", value or "")
+    value = value.replace("{", "").replace("}", "")
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def normalize_acm(entry: dict, query_id: str, run_id: str, raw_path: str) -> dict:
+    """
+    Map one entry of an ACM DL BibTeX export (parse_bibtex) to the unified
+    schema. ACM uses the DOI as the citation key; the native id is the DOI,
+    else the key. content_type is the BibTeX entry type; ACM exports carry
+    no citation count.
+    """
+    doi = _clean_doi(entry.get("doi")) or (_clean_doi(entry["_key"]) if entry["_key"].startswith("10.") else None)
+    year = _bib_plain(entry.get("year"))
+    keywords = [k.strip() for k in _bib_plain(entry.get("keywords")).split(",") if k.strip()]
+    authors = [a.strip() for a in re.split(r"\s+and\s+", _bib_plain(entry.get("author"))) if a.strip()]
+    return {
+        "record_id": f"acm:{doi or entry['_key']}",
+        "db": "acm",
+        "query_id": query_id,
+        "run_id": run_id,
+        "doi": doi,
+        "title": _bib_plain(entry.get("title")),
+        "abstract": _bib_plain(entry.get("abstract")),
+        "year": int(year) if year[:4].isdigit() and len(year) == 4 else None,
+        "venue": _bib_plain(entry.get("journal") or entry.get("booktitle")) or None,
+        "content_type": entry["_type"],
+        "authors": authors,
+        "keywords": keywords,
+        "citing_count": None,
+        "url": _bib_plain(entry.get("url")) or (f"https://doi.org/{doi}" if doi else None),
         "pdf_url": None,
         "raw_path": raw_path,
     }

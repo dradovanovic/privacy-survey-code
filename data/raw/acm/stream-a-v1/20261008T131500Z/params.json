@@ -1,0 +1,23 @@
+{
+  "query": "(Title:(survey OR review OR \"systematic review\" OR \"literature review\" OR \"systematic mapping\" OR \"mapping study\" OR taxonomy OR tutorial OR overview OR \"state of the art\" OR \"state-of-the-art\") OR Abstract:(survey OR review OR \"systematic review\" OR \"literature review\" OR \"systematic mapping\" OR \"mapping study\" OR taxonomy OR tutorial OR overview OR \"state of the art\" OR \"state-of-the-art\") OR Keyword:(survey OR review OR \"systematic review\" OR \"literature review\" OR \"systematic mapping\" OR \"mapping study\" OR taxonomy OR tutorial OR overview OR \"state of the art\" OR \"state-of-the-art\")) AND (Title:(\"smart meter\" OR \"smart meters\" OR \"smart metering\" OR \"advanced metering infrastructure\" OR AMI OR \"smart grid\" OR \"smart grids\" OR \"load profile\" OR \"load profiles\" OR \"electricity consumption data\" OR \"energy consumption data\") OR Abstract:(\"smart meter\" OR \"smart meters\" OR \"smart metering\" OR \"advanced metering infrastructure\" OR AMI OR \"smart grid\" OR \"smart grids\" OR \"load profile\" OR \"load profiles\" OR \"electricity consumption data\" OR \"energy consumption data\") OR Keyword:(\"smart meter\" OR \"smart meters\" OR \"smart metering\" OR \"advanced metering infrastructure\" OR AMI OR \"smart grid\" OR \"smart grids\" OR \"load profile\" OR \"load profiles\" OR \"electricity consumption data\" OR \"energy consumption data\")) AND (Title:(privacy OR \"consumer privacy\" OR \"data privacy\" OR \"information privacy\" OR \"privacy preserving\" OR \"privacy-preserving\" OR anonymization OR anonymisation OR \"de-identification\" OR \"re-identification\") OR Abstract:(privacy OR \"consumer privacy\" OR \"data privacy\" OR \"information privacy\" OR \"privacy preserving\" OR \"privacy-preserving\" OR anonymization OR anonymisation OR \"de-identification\" OR \"re-identification\") OR Keyword:(privacy OR \"consumer privacy\" OR \"data privacy\" OR \"information privacy\" OR \"privacy preserving\" OR \"privacy-preserving\" OR anonymization OR anonymisation OR \"de-identification\" OR \"re-identification\"))",
+  "interface": "ACM DL Advanced Search, web UI (manual run; no API)",
+  "collection": "ACM Full-Text Collection",
+  "acm_filter": "ACM Content: DL",
+  "start_year": 2009,
+  "end_year": 2026,
+  "date_filter_note": "First run used 2010-2026. Re-checked on 2026-10-09 with 2009-2026: same result, so the exported records cover 2009-2026. The ACM query export does not record the date filter.",
+  "content_type_filter": null,
+  "query_name": "queryExp",
+  "search_run_date_local": "2026-10-08 at 06:31:35 PDT",
+  "search_run_date_utc": "2026-10-08T13:31:35Z",
+  "hit_count": 77,
+  "export_format": "BibTeX (Export Citations, 50 per page)",
+  "files": [
+    "p001.bib",
+    "p002.bib"
+  ],
+  "records_exported": 77,
+  "records_exported_note": "p001.bib has 51 entries and p002.bib 26, matching the hit count of 77. 7 entries are @proceedings (whole volumes).",
+  "query_export_file": "queryExp.csv",
+  "hit_count_note": "The UI results header shows 77 (checked 2026-10-09 with 2009-2026). queryExp.csv, exported 2026-10-08, records 76."
+}

@@ -1,0 +1,61 @@
+# ACM DL import: `stream-a-v1`
+
+- run_id: 20261008T131500Z; files: 2; UI hit count: 77
+- entries imported: 77 (inproceedings 52, article 18, proceedings 7); unique within the export: 74
+- already retrieved by ieee, openalex: 21 by DOI, 1 by title
+- not in the API databases: 52
+
+## Records not in the API databases
+
+- acm:10.1145/3736425.3770103 (2025, Proceedings of the 12th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation): Bloom-LLM: Privacy-Preserving Large Language Model for Load Forecasting
+- acm:10.1145/3573428.3573780 (2023, Proceedings of the 2022 6th International Conference on Electronic Information Technology and Computer Engineering): A Secure Data Aggregation Scheme Enabling Abnormal Smart Meters Traceback for Smart Grid
+- acm:10.1145/3786163.3788452 (2026, Proceedings of the 14th IEEE/ACM International Workshop on Software Engineering for Systems-of-Systems and Software Ecosystems): Trusted Execution Environments in Systems-of-Systems: A Systematic Mapping Study
+- acm:10.1145/3440249 (2021, ACM Trans. Sen. Netw.): Privacy-preserving Data Aggregation against Malicious Data Mining Attack for IoT-enabled Smart Grid
+- acm:10.1145/3767163 (2025, ACM Trans. Priv. Secur.): VPT: Privacy Preserving Energy Trading and Block Mining Mechanism for Blockchain Based Virtual Power Plants
+- acm:10.1145/3575813.3576876 (2023, Proceedings of the 14th ACM International Conference on Future Energy Systems): A distributed approach to privacy-preservation and integrity assurance of smart metering data
+- acm:10.1145/3447555.3464873 (2021, Proceedings of the Twelfth ACM International Conference on Future Energy Systems): Towards Privacy-preserving Framework for Non-Intrusive Load Monitoring
+- acm:10.1145/3786484.3786485 (2026, Proceedings of the 2025 International Conference on Artificial Intelligence and Sustainable Development): Research on smart grid data protection based on cloud computing
+- acm:10.1145/3055386.3055389 (2017, Proceedings of the 2nd Workshop on Cyber-Physical Security and Resilience in Smart Grids): Privacy Friendly Aggregation of Smart Meter Readings, Even When Meters Crash
+- acm:10.1145/3511616.3513097 (2022, Proceedings of the 2022 Australasian Computer Science Week): Blockchain Applications in Smart Grid
+- acm:10.1145/3236112.3236139 (2018, Proceedings of the 20th International Conference on Human-Computer Interaction with Mobile Devices and Services Adjunct): Privacy in the smart grid: end-user concerns and requirements
+- acm:10.1145/2695664.2695725 (2015, Proceedings of the 30th Annual ACM Symposium on Applied Computing): Harnessing the unknown in advanced metering infrastructure traffic
+- acm:10.1145/3708821.3733913 (2025, Proceedings of the 20th ACM Asia Conference on Computer and Communications Security): Pay What You Spend! Privacy-Aware Real-Time Pricing with High Precision IEEE 754 Floating Point Division
+- acm:10.1145/2736277.2741122 (2015, Proceedings of the 24th International Conference on World Wide Web): A Practical Framework for Privacy-Preserving Data Analytics
+- acm:10.1145/3281444 (2019, ACM Trans. Comput.-Hum. Interact.): It Is About What They Could Do with the Data: A User Perspective on Privacy in Smart Metering
+- acm:10.1145/3477314.3508383 (2022, Proceedings of the 37th ACM/SIGAPP Symposium on Applied Computing): Ontology-based user privacy management in smart grid
+- acm:10.1145/2480362.2480488 (2013, Proceedings of the 28th Annual ACM Symposium on Applied Computing): Privacy-friendly tasking and trading of energy in smart grids
+- acm:10.1145/3291533.3291559 (2018, Proceedings of the 22nd Pan-Hellenic Conference on Informatics): Towards an anonymous incident communication channel for electric smart grids
+- acm:10.1145/2382196.2382242 (2012, Proceedings of the 2012 ACM Conference on Computer and Communications Security): Minimizing private data disclosures in the smart grid
+- acm:10.1145/2751323.2751325 (2015, Proceedings of the Eighth European Workshop on System Security): A study on data de-pseudonymization in the smart grid
+- acm:10.1145/3787330.3787337 (2026, Proceedings of the 13th International Conference on Information Technology: IoT and Smart City): Smart Governance using an Integrated IoT Model in the Sultanate of Oman: Architecture and Pilots
+- acm:10.1145/3518781.3519181 (2022, 2021 International Conference on Mechanical, Aerospace and Automotive Engineering): LSTM Short-term Residential Load Forecasting Based on Federated Learning
+- acm:10.1145/2516930.2516935 (2013, Proceedings of the First ACM Workshop on Smart Energy Grid Security): Customer-centric energy usage data management and sharing in smart grid systems
+- acm:10.1145/2676061.2675045 (2018, Proceedings of the 1st ACM Conference on Embedded Systems for Energy-Efficient Buildings): SBD: a signature-based detection for activities of appliances: poster abstract
+- acm:10.1145/3696446 (2024, ACM Comput. Surv.): Challenges and Opportunities in Mobile Network Security for Vertical Applications: A Survey
+- acm:10.1145/2367580.2367586 (2012, SIGBED Rev.): Improving device-level electricity consumption breakdowns in private households using ON/OFF events
+- acm:10.1145/3208903.3212048 (2018, Proceedings of the Ninth International Conference on Future Energy Systems): PrivEnergy: a Privacy Operator Framework Addressing Individual Concerns
+- acm:10.1145/3759179.3760548 (2025, Proceedings of the 10th International Conference on Cyber Security and Information Engineering): Data Security and Privacy Protection of Intelligent Payment Technology in Electricity Bill Collection and Collection System
+- acm:10.1145/3801489.3806902 (2026, Abstracts of the 2026 ACM SIGMETRICS International Conference on Measurement and Modeling of Computer Systems): Information Design for Prosocial Behavior
+- acm:10.1145/3744256.3812595 (2026, Proceedings of the 13th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation): WattCouncil: Context-Aware Household Energy Scenario Generation With Governed LLMs
+- acm:10.1145/3482632.3487527 (2021, 2021 4th International Conference on Information Systems and Computer Aided Education): There is No Need for Trusted Third Party Data Aggregation Schemes for Privacy Protection in the Grid
+- acm:10.1145/3765611.3815494 (2026, Proceedings of the 2026 ACM Sustainability Week): From Static Surveys to Living Agents: A Generative LLM-Agent Workflow for Residential Energy Simulation
+- acm:10.1145/2686612.2686664 (2014, Proceedings of the 26th Australian Computer-Human Interaction Conference on Designing Futures: The Future of Design): Privacy in the new era of visible and sharable energy-use information
+- acm:10.1145/3007788.3007793 (2016, Proceedings of the 1st Workshop on System Software for Trusted Execution): Exploring the use of Intel SGX for Secure Many-Party Applications
+- acm:10.1145/3491102.3517515 (2022, Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems): Privacy Design Strategies for Home Energy Management Systems (HEMS)
+- acm:10.1109/tnet.2021.3063102 (2021, IEEE/ACM Trans. Netw.): Achieving Privacy Preservation and Billing via Delayed Information Release
+- acm:10.1145/3494106 (2022, ?): BSCI '22: Proceedings of the Fourth ACM International Symposium on Blockchain and Secure Critical Infrastructure
+- acm:10.1145/3576915.3623091 (2023, Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security): Let's Go Eevee! A Friendly and Suitable Family of AEAD Modes for IoT-to-Cloud Secure Computation
+- acm:10.1145/2600918.2600920 (2014, Proceedings of the 2nd ACM Workshop on Information Hiding and Multimedia Security): Influence of data granularity on nonintrusive appliance load monitoring
+- acm:10.1145/3384943 (2020, ?): BSCI '20: Proceedings of the 2nd ACM International Symposium on Blockchain and Secure Critical Infrastructure
+- acm:10.1145/3457337 (2021, ?): BSCI '21: Proceedings of the 3rd ACM International Symposium on Blockchain and Secure Critical Infrastructure
+- acm:10.1145/3327960 (2019, ?): BSCI '19: Proceedings of the 2019 ACM International Symposium on Blockchain and Secure Critical Infrastructure
+- acm:10.1145/2185376.2185390 (2012, SIGCOMM Comput. Commun. Rev.): Privacy analytics
+- acm:10.1145/2516930 (2013, ?): SEGS '13: Proceedings of the first ACM workshop on Smart energy grid security
+- acm:10.1145/3421508 (2021, ACM Trans. Internet Technol.): Multi-Tier Stack of Block Chain with Proxy Re-Encryption Method Scheme on the Internet of Things Platform
+- acm:10.1145/2463183 (2013, ?): HotWiSec '13: Proceedings of the 2nd ACM workshop on Hot topics on wireless network security and privacy
+- acm:10.1145/2821650.2821659 (2015, Proceedings of the 2nd ACM International Conference on Embedded Systems for Energy-Efficient Built Environments): LocED: Location-aware Energy Disaggregation Framework
+- acm:10.1145/2700326 (2015, ACM Trans. Auton. Adapt. Syst.): A Generic Holonic Control Architecture for Heterogeneous Multiscale and Multiobjective Smart Microgrids
+- acm:10.1145/2462096 (2013, ?): WiSec '13: Proceedings of the sixth ACM conference on Security and privacy in wireless and mobile networks
+- acm:10.1145/1878022.1878023 (2010, Proceedings of the 3rd Workshop on Mobile Video Delivery): Multimodal sensing in mobile and cyber-physical systems
+- acm:10.1145/3407947.3407971 (2020, Proceedings of the 2020 4th International Conference on High Performance Compilation, Computing and Communications): Architecture Design of Hybrid Networking in Power Wireless Private Network
+- acm:10.1145/2487166.2487176 (2013, Proceedings of the Fourth International Conference on Future Energy Systems): Computational environmental ethnography: combining collective sensing and ethnographic inquiries to advance means for reducing environmental footprints

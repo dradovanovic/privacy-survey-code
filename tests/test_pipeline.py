@@ -1,3 +1,4 @@
+import csv
 import json
 import re
 from pathlib import Path
@@ -444,3 +445,132 @@ def test_seed_hits_by_db_counts_each_database_before_dedupe():
             {**_rec("x", doi="10.1/a", rid="openalex:W1"), "db": "openalex"},
             {**_rec("Paper B", rid="openalex:W2"), "db": "openalex"}]
     assert rec.seed_hits_by_db(seeds, rows) == {"ieee": ["A"], "openalex": ["A", "B"]}
+
+
+ACM_BIB = r"""@inproceedings{10.1145/1111.2222,
+author = {Doe, Jane and Roe, Richard},
+title = {Smart Meter Privacy: {A} Survey},
+year = {2021},
+publisher = {Association for Computing Machinery},
+url = {https://doi.org/10.1145/1111.2222},
+doi = {10.1145/1111.2222},
+abstract = {We review inference with cost {$O(n^{2})$} \& linkage.},
+booktitle = {Proceedings of e-Energy '21},
+keywords = {privacy, smart meter},
+series = {e-Energy '21}
+}
+
+@article{10.1145/3333.4444,
+author = {Poe, Ann},
+title = {Load profile privacy in smart grids: a review},
+year = {2019},
+journal = {ACM Trans. Priv. Secur.},
+}
+
+@comment{ignored}
+@article{acmkey5,
+title = "Voltage control: a tutorial",
+year = 2018,
+}
+"""
+
+
+def test_parse_bibtex_nested_braces_and_normalize_acm():
+    entries = rec.parse_bibtex(ACM_BIB)
+    assert [e["_key"] for e in entries] == ["10.1145/1111.2222", "10.1145/3333.4444", "acmkey5"]
+    r = rec.normalize_acm(entries[0], "q", "run", "raw.bib")
+    assert r["record_id"] == "acm:10.1145/1111.2222" and r["doi"] == "10.1145/1111.2222"
+    assert r["title"] == "Smart Meter Privacy: A Survey"
+    assert r["abstract"] == "We review inference with cost $O(n^2)$ & linkage."
+    assert r["authors"] == ["Doe, Jane", "Roe, Richard"] and r["keywords"] == ["privacy", "smart meter"]
+    assert (r["year"], r["venue"], r["content_type"]) == (2021, "Proceedings of e-Energy '21", "inproceedings")
+    r2 = rec.normalize_acm(entries[1], "q", "run", "raw.bib")
+    assert r2["doi"] == "10.1145/3333.4444" and r2["url"] == "https://doi.org/10.1145/3333.4444"
+    r3 = rec.normalize_acm(entries[2], "q", "run", "raw.bib")
+    assert (r3["record_id"], r3["doi"], r3["year"]) == ("acm:acmkey5", None, 2018)
+
+
+def test_import_acm_logs_merges_and_summarizes(tmp_path):
+    q = json.loads(QUERY.read_text())
+    qid = q["query_id"]
+    (tmp_path / "normalized").mkdir()
+    api = [{"record_id": "ieee:1", "db": "ieee", "doi": "10.1145/1111.2222", "title": "Smart meter privacy: a survey",
+            "abstract": "", "keywords": [], "year": 2021},
+           {"record_id": "openalex:W9", "db": "openalex", "doi": None, "title": "Voltage control - a tutorial",
+            "abstract": "", "keywords": [], "year": 2018}]
+    (tmp_path / "normalized" / f"{qid}.ieee.jsonl").write_text(json.dumps(api[0]) + "\n")
+    (tmp_path / "normalized" / f"{qid}.openalex.jsonl").write_text(json.dumps(api[1]) + "\n")
+    seeds = tmp_path / "seeds" / "stream_a_seeds.txt"
+    seeds.parent.mkdir()
+    seeds.write_text("Load profile privacy in smart grids: a review;10.1145/3333.4444;P19;acm\n")
+    q["seed_set"] = "seeds/stream_a_seeds.txt"
+    qpath = tmp_path / "queries" / "q.json"
+    qpath.parent.mkdir()
+    qpath.write_text(json.dumps(q))
+    export = tmp_path / "acm.bib"
+    export.write_text(ACM_BIB, encoding="utf-8")
+
+    assert main(["--data-dir", str(tmp_path), "import", str(qpath), "--db", "acm",
+                 "--file", str(export), "--hit-count", "3"]) == 0
+    runs = (tmp_path / "runs.csv").read_text(encoding="utf-8").splitlines()
+    assert len(runs) == 2 and ",acm," in runs[1] and ",3,3,import," in runs[1]
+    run_id = runs[1].split(",")[1]
+    assert (tmp_path / "raw" / "acm" / qid / run_id / "export_001_acm.bib").read_text() == ACM_BIB
+    acm_rep = (tmp_path / "reports" / f"{qid}.acm.md").read_text(encoding="utf-8")
+    assert "1 by DOI, 1 by title" in acm_rep and "not in the API databases: 1" in acm_rep
+    assert "acm:10.1145/3333.4444" in acm_rep
+    report = (tmp_path / "reports" / f"{qid}.md").read_text(encoding="utf-8")
+    assert "unique after DOI/title dedupe: 3" in report
+    assert "- acm: 1/1 seeds retrieved" in report
+    sheet = (tmp_path / "screening" / f"{qid}.csv").read_text(encoding="utf-8")
+    assert "ieee:1," in sheet and "openalex:W9," in sheet and "acm:10.1145/3333.4444," in sheet
+    assert "acm:10.1145/1111.2222" not in sheet and "acm:acmkey5" not in sheet
+
+
+def _acm_run_dir(tmp_path, qid, run_id="20261008T131500Z", **params):
+    run_dir = tmp_path / "raw" / "acm" / qid / run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "p001.bib").write_text(ACM_BIB, encoding="utf-8")
+    (run_dir / "params.json").write_text(json.dumps({
+        "query": "Title:(survey) AND Abstract:(privacy)", "collection": "ACM Full-Text Collection",
+        "acm_filter": "ACM Content: DL", "start_year": 2010, "end_year": 2026,
+        "search_run_date_utc": "2026-10-08T13:31:35Z", "hit_count": 2, "files": ["p001.bib"],
+        "records_exported_note": "1 entry is a proceedings volume.", **params}))
+    return run_dir
+
+
+def test_import_acm_run_dir_reads_params_without_copying(tmp_path, capsys):
+    q = json.loads(QUERY.read_text())
+    qid = q["query_id"]
+    run_dir = _acm_run_dir(tmp_path, qid)
+    args = ["--data-dir", str(tmp_path), "import", str(QUERY), "--db", "acm", "--run-dir", str(run_dir)]
+    assert main(args) == 0
+    assert sorted(p.name for p in run_dir.iterdir()) == ["p001.bib", "params.json"]
+    assert sorted(p.name for p in (run_dir.parent).iterdir()) == [run_dir.name]
+    assert "1 entry is a proceedings volume." in capsys.readouterr().err
+    with open(tmp_path / "runs.csv", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 1
+    r = rows[0]
+    assert (r["timestamp"], r["run_id"], r["returned"], r["total_records"], r["status"]) == \
+        ("2026-10-08T13:31:35Z", "20261008T131500Z", "3", "2", "import")
+    assert r["querytext"] == ("Title:(survey) AND Abstract:(privacy) | collection: ACM Full-Text Collection; "
+                              "ACM Content: DL | publication_year: 2010-2026")
+    norm = (tmp_path / "normalized" / f"{qid}.acm.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(norm) == 3 and json.loads(norm[0])["raw_path"] == str(run_dir / "p001.bib")
+    assert main(args) == 0                                   # re-import: not logged twice
+    assert len((tmp_path / "runs.csv").read_text(encoding="utf-8").strip().splitlines()) == 2
+
+
+def test_import_acm_run_dir_rejects_bad_input(tmp_path):
+    q = json.loads(QUERY.read_text())
+    run_dir = _acm_run_dir(tmp_path, q["query_id"])
+    base = ["--data-dir", str(tmp_path), "import", str(QUERY), "--db", "acm"]
+    assert main(base + ["--run-dir", str(run_dir), "--hit-count", "5"]) == 2      # contradicts params.json
+    assert main(base + ["--run-dir", str(tmp_path / "nope")]) == 2
+    other = _acm_run_dir(tmp_path, "other-query")
+    assert main(base + ["--run-dir", str(other)]) == 2                            # wrong query_id folder
+    assert main(base + ["--file", str(run_dir / "p001.bib")]) == 2                # --hit-count missing
+    with pytest.raises(SystemExit):
+        main(base + ["--file", "x.bib", "--run-dir", str(run_dir), "--hit-count", "1"])
+    assert not (tmp_path / "runs.csv").exists()
