@@ -28,7 +28,8 @@ raw_path       file the raw item came from (for audit)
 abstract_source  "scopus", or the backfill that filled it: "openalex_backfill", "crossref",
                "semantic_scholar"; null when empty (absent on records never backfilled)
 flags          ["abstract_missing"] while the abstract is empty or under 30 words
-               (set by normalize_scopus and by the abstract backfill)
+               (set by normalize_scopus and by the abstract backfill; the screening
+               sheet derives the flag from the word count for every record)
 publisher      Crossref publisher name, on records looked up in Crossref
 """
 
@@ -130,8 +131,8 @@ MIN_ABSTRACT_WORDS = 30   # screening spec: an abstract under 30 words counts as
 
 
 def needs_abstract(r: dict) -> bool:
-    """Empty abstract, or flagged abstract_missing (e.g. a backfilled abstract under MIN_ABSTRACT_WORDS)."""
-    return not r.get("abstract") or "abstract_missing" in (r.get("flags") or [])
+    """Abstract empty or under MIN_ABSTRACT_WORDS words, whatever its source (screening spec)."""
+    return len((r.get("abstract") or "").split()) < MIN_ABSTRACT_WORDS
 
 
 def fill_abstracts(rows: Iterable[dict], by_doi: dict[str, str], source: str) -> int:

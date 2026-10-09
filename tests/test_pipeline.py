@@ -1,4 +1,5 @@
 import csv
+import io
 import json
 import re
 from pathlib import Path
@@ -522,7 +523,7 @@ def test_import_acm_logs_merges_and_summarizes(tmp_path):
     report = (tmp_path / "reports" / f"{qid}.md").read_text(encoding="utf-8")
     assert "unique after DOI/title dedupe: 3" in report
     assert "- acm: 1/1 seeds retrieved" in report
-    sheet = (tmp_path / "screening" / f"{qid}.csv").read_text(encoding="utf-8")
+    sheet = (tmp_path / "screening" / f"{qid}.csv").read_text(encoding="utf-8-sig")
     assert "ieee:1," in sheet and "openalex:W9," in sheet and "acm:10.1145/3333.4444," in sheet
     assert "acm:10.1145/1111.2222" not in sheet and "acm:acmkey5" not in sheet
 
@@ -656,7 +657,7 @@ def test_backfill_command_saves_raw_logs_and_replays(tmp_path, monkeypatch):
         in report
     assert "- still missing by publisher (Crossref publisher, else DOI prefix):\n" \
            "    - publisher unknown (DOI prefix 10.1): 1\n    - no DOI: 1" in report
-    with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8") as fh:
+    with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8-sig") as fh:
         sheet = {r["record_id"]: r for r in csv.DictReader(fh)}
     assert sheet["scopus:2-s2.0-0"]["abstract_source"] == "openalex_backfill"
     assert sheet["scopus:2-s2.0-1"]["flags"] == "abstract_missing"
@@ -808,7 +809,48 @@ def test_backfill_all_missing_crossref_then_semanticscholar(tmp_path, monkeypatc
     assert "- still missing (abstract_missing): 2 (1 without DOI)" in report
     assert "    - publisher unknown (DOI prefix 10.1): 1\n" in report   # scopus:2, 404 in Crossref
     assert "    - no DOI: 1" in report
-    with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8") as fh:
+    with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8-sig") as fh:
         sheet = {r["record_id"]: r for r in csv.DictReader(fh)}
     assert sheet["scopus:2"]["flags"] == "abstract_missing"
     assert sheet["scopus:2"]["abstract_source"] == "semantic_scholar"
+
+
+def test_screening_sheet_one_line_bom_30_words_and_xlsx(tmp_path):
+    from openpyxl import load_workbook
+    q = json.loads(QUERY.read_text())
+    qid = q["query_id"]
+    (tmp_path / "normalized").mkdir()
+    rows = [
+        {"record_id": "ieee:1", "db": "ieee", "doi": "10.1/a", "year": 2020, "keywords": ["smart\nmeter", "privacy"],
+         "title": "-Privacy of smart meters:\r\na survey", "venue": "Energy\tJournal",
+         "abstract": "Über Datenschutz.\n\n\tZeile zwei " + LONG},
+        {"record_id": "ieee:2", "db": "ieee", "doi": "10.1/b", "year": 2021, "keywords": [],
+         "title": "=SUM(A1) short one", "venue": "V", "abstract": "Only twelve words in this abstract, which is under the thirty limit."},
+    ]
+    (tmp_path / "normalized" / f"{qid}.ieee.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    assert main(["--data-dir", str(tmp_path), "summarize", str(QUERY)]) == 0
+
+    raw = (tmp_path / "screening" / f"{qid}.csv").read_bytes()
+    assert raw.startswith(b"\xef\xbb\xbf")                           # UTF-8 BOM
+    lines = raw.decode("utf-8-sig").splitlines()
+    assert len(lines) == 3 and lines[0].startswith("record_id,db,doi,")   # one physical line per record
+    with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8-sig", newline="") as fh:
+        sheet = {r["record_id"]: r for r in csv.DictReader(fh)}
+    a, b = sheet["ieee:1"], sheet["ieee:2"]
+    assert a["title"] == "-Privacy of smart meters: a survey" and a["venue"] == "Energy Journal"
+    assert a["abstract"].startswith("Über Datenschutz. Zeile zwei word0") and a["keywords"] == "smart meter; privacy"
+    assert a["flags"] == "" and b["flags"] == "abstract_missing"     # 30-word rule, any source
+
+    ws = load_workbook(tmp_path / "screening" / f"{qid}.xlsx").active
+    header = [c.value for c in ws[1]]
+    assert header == list(csv.DictReader(io.StringIO(lines[0])).fieldnames)
+    assert ws.freeze_panes == "A2" and ws.max_row == 3
+    col = {name: i + 1 for i, name in enumerate(header)}
+    by_id = {ws.cell(row=r, column=1).value: r for r in (2, 3)}
+    title_b = ws.cell(row=by_id["ieee:2"], column=col["title"])
+    assert (title_b.value, title_b.data_type) == ("=SUM(A1) short one", "s")   # text, not a formula
+    year_a = ws.cell(row=by_id["ieee:1"], column=col["year"])
+    assert (year_a.value, year_a.data_type, year_a.number_format) == ("2020", "s", "@")
+    assert ws.cell(row=by_id["ieee:1"], column=col["abstract"]).alignment.wrap_text is True
+    cells = [ws.cell(row=r, column=c) for r in range(1, 4) for c in range(1, len(header) + 1)]
+    assert all(c.data_type == "s" for c in cells if c.value is not None)   # empty cells read back as None

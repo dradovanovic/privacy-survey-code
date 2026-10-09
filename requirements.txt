@@ -10,3 +10,4 @@ pyyaml
 tqdm
 rapidfuzz
 pytest>=8.0
+openpyxl

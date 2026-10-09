@@ -37,6 +37,7 @@ import argparse
 import collections
 import csv
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -642,30 +643,88 @@ def cmd_summarize(args) -> int:
     # Screening sheet: one row per unique record, decision columns empty.
     scr = data_dir / "screening" / f"{qid}.csv"
     scr.parent.mkdir(parents=True, exist_ok=True)
-    cols = ["record_id", "db", "doi", "year", "content_type", "venue", "title", "abstract",
-            "abstract_source", "flags", "keywords", "citing_count", "url", "local_match", "venue_match",
-            "decision", "criteria", "rationale", "screener"]
-    with open(scr, "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols)
+    ok_ids = {r["record_id"] for r in local_ok}
+    venue_ids = {r["record_id"] for r in venue_ok}
+    sheet = [_sheet_row(r, ok_ids, venue_ids)
+             for r in sorted(unique, key=lambda r: (-(r.get("citing_count") or 0), r.get("year") or 0))]
+    # utf-8-sig: the BOM makes Excel read the file as UTF-8 (umlauts) instead of the ANSI code page
+    with open(scr, "w", newline="", encoding="utf-8-sig") as fh:
+        w = csv.DictWriter(fh, fieldnames=SHEET_COLUMNS)
         w.writeheader()
-        ok_ids = {r["record_id"] for r in local_ok}
-        venue_ids = {r["record_id"] for r in venue_ok}
-        for r in sorted(unique, key=lambda r: (-(r.get("citing_count") or 0), r.get("year") or 0)):
-            w.writerow({
-                "record_id": r["record_id"], "db": r["db"], "doi": r.get("doi") or "",
-                "year": r.get("year") or "", "content_type": r.get("content_type") or "",
-                "venue": r.get("venue") or "", "title": r["title"], "abstract": r["abstract"],
-                "abstract_source": r.get("abstract_source") or (r["db"] if r["abstract"] else ""),
-                "flags": "; ".join((r.get("flags") or [])
-                                   + (["abstract_missing"] if not r["abstract"]
-                                      and "abstract_missing" not in (r.get("flags") or []) else [])),
-                "keywords": "; ".join(r.get("keywords") or []), "citing_count": r.get("citing_count") or "",
-                "url": r.get("url") or "", "local_match": int(r["record_id"] in ok_ids),
-                "venue_match": int(r["record_id"] in venue_ids),
-                "decision": "", "criteria": "", "rationale": "", "screener": "",
-            })
-    print(f"\nscreening sheet -> {scr}")
+        w.writerows(sheet)
+    print(f"\nscreening sheet -> {scr}  ({len(sheet)} records, "
+          f"{sum(1 for s in sheet if 'abstract_missing' in s['flags'])} flagged abstract_missing)")
+    xlsx = scr.with_suffix(".xlsx")
+    try:
+        _write_sheet_xlsx(xlsx, sheet)
+        print(f"reading copy -> {xlsx}")
+    except PermissionError:
+        print(f"warning: {xlsx} is locked (open in Excel?); reading copy not updated. "
+              f"The CSV is the source of truth.", file=sys.stderr)
     return 0
+
+
+SHEET_COLUMNS = ["record_id", "db", "doi", "year", "content_type", "venue", "title", "abstract",
+                 "abstract_source", "flags", "keywords", "citing_count", "url", "local_match", "venue_match",
+                 "decision", "criteria", "rationale", "screener"]
+_LINE_BREAKS = re.compile(r"\s*[\r\n\t\v\f\x85  ]+\s*")
+
+
+def _one_line(text: str | None) -> str:
+    """Collapse line breaks and tabs (with surrounding blanks) to single spaces, so each record is one row."""
+    return _LINE_BREAKS.sub(" ", text or "").strip()
+
+
+def _sheet_row(r: dict, ok_ids: set, venue_ids: set) -> dict:
+    flags = [f for f in r.get("flags") or [] if f != "abstract_missing"]
+    if rec.needs_abstract(r):           # 30-word rule for every record, whatever its source
+        flags.append("abstract_missing")
+    return {
+        "record_id": r["record_id"], "db": r["db"], "doi": r.get("doi") or "",
+        "year": r.get("year") or "", "content_type": r.get("content_type") or "",
+        "venue": _one_line(r.get("venue")), "title": _one_line(r["title"]), "abstract": _one_line(r["abstract"]),
+        "abstract_source": r.get("abstract_source") or (r["db"] if r["abstract"] else ""),
+        "flags": "; ".join(flags),
+        "keywords": _one_line("; ".join(r.get("keywords") or [])), "citing_count": r.get("citing_count") or "",
+        "url": r.get("url") or "", "local_match": int(r["record_id"] in ok_ids),
+        "venue_match": int(r["record_id"] in venue_ids),
+        "decision": "", "criteria": "", "rationale": "", "screener": "",
+    }
+
+
+def _write_sheet_xlsx(path: Path, sheet: list[dict]) -> None:
+    """
+    Reading copy of the screening sheet: same columns, every cell stored as
+    text (data_type 's' and number format '@', so '=...' or '-...' is never a
+    formula and DOIs or years are not converted), header frozen, abstracts
+    wrapped. Characters XML forbids are dropped; cells are capped at Excel's
+    32767 characters. Decisions go into the CSV, not here.
+    """
+    from openpyxl import Workbook
+    from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+    from openpyxl.styles import Alignment, Font
+    from openpyxl.utils import get_column_letter
+
+    widths = {"title": 60, "abstract": 100, "venue": 30, "keywords": 40, "url": 30, "rationale": 40}
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "screening"
+    for row_no, values in enumerate([SHEET_COLUMNS] + [[s[c] for c in SHEET_COLUMNS] for s in sheet], 1):
+        for col_no, value in enumerate(values, 1):
+            cell = ws.cell(row=row_no, column=col_no)
+            cell.value = ILLEGAL_CHARACTERS_RE.sub("", str(value))[:32767]
+            cell.data_type = "s"
+            cell.number_format = "@"
+    for col_no, name in enumerate(SHEET_COLUMNS, 1):
+        ws.column_dimensions[get_column_letter(col_no)].width = widths.get(name, 14)
+        ws.cell(row=1, column=col_no).font = Font(bold=True)
+    wrap = Alignment(wrap_text=True, vertical="top")
+    abstract_col = SHEET_COLUMNS.index("abstract") + 1
+    for row_no in range(2, len(sheet) + 2):
+        ws.cell(row=row_no, column=abstract_col).alignment = wrap
+    ws.freeze_panes = "A2"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(path)
 
 
 # ----------------------------------------------------------------------------

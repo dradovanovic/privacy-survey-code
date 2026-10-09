@@ -74,13 +74,13 @@ Per database (all normalized records, before dedupe):
 
 - acm records: 77; filled: none; still missing (abstract_missing): 0 (0 without DOI)
 - ieee records: 847; filled: none; still missing (abstract_missing): 0 (0 without DOI)
-- openalex records: 924; filled: semantic_scholar 31; still missing (abstract_missing): 181 (1 without DOI)
+- openalex records: 924; filled: semantic_scholar 31; still missing (abstract_missing): 182 (2 without DOI)
 - scopus records: 911; filled: openalex_backfill 634, semantic_scholar 11; still missing (abstract_missing): 266 (22 without DOI)
 
 Screening sheet (unique records):
 
 - filled by backfill: openalex_backfill 72, semantic_scholar 42
-- still missing (abstract_missing): 238 (15 without DOI)
+- still missing (abstract_missing): 239 (16 without DOI)
 - still missing by publisher (Crossref publisher, else DOI prefix):
     - Elsevier BV: 54
     - Springer International Publishing: 45
@@ -88,7 +88,7 @@ Screening sheet (unique records):
     - Springer Nature Switzerland: 24
     - Elsevier: 22
     - Springer Nature Singapore: 16
-    - no DOI: 15
+    - no DOI: 16
     - Springer Berlin Heidelberg: 9
     - Springer Singapore: 8
     - Springer London: 2
