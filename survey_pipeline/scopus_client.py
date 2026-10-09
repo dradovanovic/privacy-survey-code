@@ -116,6 +116,30 @@ class ScopusClient:
         with open(self.run_log, "a", newline="", encoding="utf-8") as fh:
             csv.DictWriter(fh, fieldnames=RUN_LOG_HEADER).writerow(row)
 
+    # --------------------------------------------------------------- lookup
+    def lookup_doi(self, doi: str, query_id: str = "manual-lookup") -> tuple[dict | None, Path]:
+        """
+        One logged request: query=DOI(<doi>) in this client's view. The raw
+        response is written to data/raw/scopus/lookup/<doi>.json before it is
+        parsed. Returns (first entry or None if Scopus does not index the DOI, raw_path).
+        """
+        q = f"DOI({doi})"
+        body, status = self._get({"query": q, "view": self.view, "count": 1})
+        raw_dir = self.data_dir / "raw" / "scopus" / "lookup"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = raw_dir / f"{doi.replace('/', '_')}.json"
+        raw_path.write_text(json.dumps(body, indent=1), encoding="utf-8")
+        items = page_items(body) if status == 200 else []
+        self._log({
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "run_id": "lookup", "db": "scopus", "query_id": query_id, "content_type": "",
+            "start_record": 0, "max_records": 1, "returned": len(items),
+            "total_records": page_total(body) if status == 200 else "", "status": status, "querytext": q,
+        })
+        if status != 200:
+            raise RuntimeError(f"Scopus API returned {status}: {body}")
+        return (items[0] if items else None), raw_path
+
     # --------------------------------------------------------------- search
     def search(self, query_id: str, params: dict, run_id: str | None = None,
                max_pages: int | None = None) -> Iterator[tuple[dict, Path, str]]:

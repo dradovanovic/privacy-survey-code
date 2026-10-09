@@ -81,25 +81,22 @@
 
 ## Seed recall
 
-- overall: 13/18 seeds retrieved (recall = 0.72); 1 pending (source database not searched yet); 19 seeds; searched: acm, ieee, openalex, scopus
+- overall: 13/15 seeds retrieved (recall = 0.87); 1 pending (source database not searched yet); 16 seeds; searched: acm, ieee, openalex, scopus
 - ieee: 9/9 seeds retrieved (recall = 1.00)
-- scopus: 4/9 seeds retrieved (recall = 0.44)
+- scopus: 4/6 seeds retrieved (recall = 0.67)
 - snowballing: no seeds evaluated yet; 1 pending
 - missing:
-    - Abdalzaher22a
     - Mohassel14a
-    - Avancini19a
-    - Scheidt20a
     - Eskandarnia22a
 - pending:
     - Komninos14a
 
 Seeds retrieved by each searched database on its own (before dedupe; all seeds):
 
-- acm: 0/19; not retrieved: Finster14a, Ashgar17a, Gross21a, Mirzaee22a, Mitra24a, Wang19a, Kumar19a, Abdalzaher22a, Bibi25a, Mohassel14a, Liu12a, Avancini19a, Alahakoon16a, Scheidt20a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a, Erkin13a
-- ieee: 9/19; not retrieved: Mitra24a, Abdalzaher22a, Bibi25a, Mohassel14a, Avancini19a, Scheidt20a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a
-- openalex: 12/19; not retrieved: Abdalzaher22a, Mohassel14a, Avancini19a, Alahakoon16a, Scheidt20a, Eskandarnia22a, Komninos14a
-- scopus: 13/19; not retrieved: Abdalzaher22a, Mohassel14a, Avancini19a, Scheidt20a, Eskandarnia22a, Komninos14a
+- acm: 0/16; not retrieved: Finster14a, Ashgar17a, Gross21a, Mirzaee22a, Mitra24a, Wang19a, Kumar19a, Bibi25a, Mohassel14a, Liu12a, Alahakoon16a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a, Erkin13a
+- ieee: 9/16; not retrieved: Mitra24a, Bibi25a, Mohassel14a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a
+- openalex: 12/16; not retrieved: Mohassel14a, Alahakoon16a, Eskandarnia22a, Komninos14a
+- scopus: 13/16; not retrieved: Mohassel14a, Eskandarnia22a, Komninos14a
 
 - seed notes:
     - Komninos14a: metadata-unreachable: in IEEE, but no privacy term in title/abstract and no index terms returned (stream-a-v1 diagnosis 2026-09-28); expected via snowballing; A-I3 satisfied by section 'Ensuring Confidentiality and Privacy' (to be verified as recovered by snowballing)

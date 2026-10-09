@@ -110,6 +110,21 @@ class OpenAlexClient:
         before it is parsed. runs.csv content_type is "abstract_backfill", so
         these rows are not counted as search results.
         """
+        raw_path = self.data_dir / "raw" / "openalex" / "backfill" / run_id / f"batch_s{start:06d}.json"
+        return self._doi_request(dois, query_id, run_id, raw_path, "abstract_backfill", start), raw_path
+
+    def lookup_doi(self, doi: str, query_id: str = "manual-lookup") -> tuple[dict | None, Path]:
+        """
+        One logged request for a single DOI; raw response in
+        data/raw/openalex/lookup/<doi>.json, runs.csv run_id "lookup".
+        Returns (first work or None if OpenAlex has no work with that DOI, raw_path).
+        """
+        raw_path = self.data_dir / "raw" / "openalex" / "lookup" / f"{doi.replace('/', '_')}.json"
+        items = page_items(self._doi_request([doi], query_id, "lookup", raw_path, "", 0))
+        return (items[0] if items else None), raw_path
+
+    def _doi_request(self, dois: list[str], query_id: str, run_id: str, raw_path: Path,
+                     content_type: str, start: int) -> dict:
         if not 0 < len(dois) <= DOI_BATCH:
             raise ValueError(f"1 to {DOI_BATCH} DOIs per request")
         bad = [d for d in dois if "," in d or "|" in d]
@@ -117,21 +132,19 @@ class OpenAlexClient:
             raise ValueError(f"DOIs containing ',' or '|' cannot go into a filter: {bad}")
         flt = "doi:" + "|".join(dois)
         body, status = self._get({"filter": flt, "per-page": MAX_PAGE})
-        raw_dir = self.data_dir / "raw" / "openalex" / "backfill" / run_id
-        raw_dir.mkdir(parents=True, exist_ok=True)
-        raw_path = raw_dir / f"batch_s{start:06d}.json"
+        raw_path.parent.mkdir(parents=True, exist_ok=True)
         raw_path.write_text(json.dumps(body, indent=1), encoding="utf-8")
         self._log({
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "run_id": run_id, "db": "openalex", "query_id": query_id,
-            "content_type": "abstract_backfill", "start_record": start, "max_records": len(dois),
+            "content_type": content_type, "start_record": start, "max_records": len(dois),
             "returned": len(page_items(body)) if status == 200 else 0,
             "total_records": page_total(body) if status == 200 else "",
             "status": status, "querytext": flt,
         })
         if status != 200:
             raise RuntimeError(f"OpenAlex API returned {status}: {body}")
-        return body, raw_path
+        return body
 
     # --------------------------------------------------------------- search
     def search(self, query_id: str, params: dict, run_id: str | None = None,

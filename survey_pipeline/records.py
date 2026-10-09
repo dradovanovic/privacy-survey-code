@@ -351,6 +351,13 @@ def group_matches(query: dict, record: dict, include_venue: bool = False) -> dic
     return out
 
 
+def field_term_matches(query: dict, record: dict,
+                       fields: tuple[str, ...] = ("title", "abstract", "keywords")) -> dict[str, dict[str, list[str]]]:
+    """{group: {field: [terms of the group found in that field]}}, for seed diagnosis."""
+    return {name: {f: [t for t in _terms(group) if _match(t, _field_text(record, (f,)))] for f in fields}
+            for name, group in query["concept_groups"].items()}
+
+
 def record_matches(query: dict, record: dict, include_venue: bool = False) -> bool:
     """True if the record satisfies the concept groups on title/abstract/keywords."""
     gop = query.get("group_operator", "AND").upper()

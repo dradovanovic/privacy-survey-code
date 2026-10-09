@@ -653,3 +653,54 @@ def test_backfill_command_saves_raw_logs_and_replays(tmp_path, monkeypatch):
         sheet = {r["record_id"]: r for r in csv.DictReader(fh)}
     assert sheet["scopus:2-s2.0-0"]["abstract_source"] == "openalex_backfill"
     assert sheet["scopus:2-s2.0-1"]["flags"] == "abstract_missing"
+
+
+def test_diagnose_seeds_scopus_reports_group_matches_per_field(tmp_path, monkeypatch):
+    from survey_pipeline import openalex_client, scopus_client
+    q = json.loads(QUERY.read_text())
+    qid = q["query_id"]
+    (tmp_path / "normalized").mkdir()
+    (tmp_path / "normalized" / f"{qid}.scopus.jsonl").write_text("")
+    seeds = tmp_path / "seeds" / "stream_a_seeds.txt"
+    seeds.parent.mkdir()
+    seeds.write_text("A survey on Advanced Metering Infrastructure;10.1016/j.x.1;M14;scopus\n"
+                     "Unindexed;10.1/none;U1;scopus\nIEEE one;10.1109/y;I1;ieee\n")
+    q["seed_set"] = "seeds/stream_a_seeds.txt"
+    qpath = tmp_path / "queries" / "q.json"
+    qpath.parent.mkdir()
+    qpath.write_text(json.dumps(q))
+
+    def scopus_get(self, params):
+        assert params["view"] == "STANDARD"
+        if params["query"] == "DOI(10.1016/j.x.1)":
+            return {"search-results": {"opensearch:totalResults": "1", "entry": [
+                {"eid": "2-s2.0-9", "dc:title": "A survey on Advanced Metering Infrastructure",
+                 "prism:coverDate": "2014-11-01", "subtype": "re", "subtypeDescription": "Review",
+                 "prism:publicationName": "IJEPES", "prism:doi": "10.1016/j.x.1"}]}}, 200
+        return {"search-results": {"opensearch:totalResults": "0", "entry": [{"error": "Result set was empty"}]}}, 200
+
+    def openalex_get(self, params):
+        if params["filter"] == "doi:10.1016/j.x.1":
+            return {"meta": {"count": 1}, "results": [
+                _openalex_work("10.1016/j.x.1", "This review covers smart meter communication and security.")]}, 200
+        return {"meta": {"count": 0}, "results": []}, 200
+    monkeypatch.setattr(scopus_client.ScopusClient, "_get", scopus_get)
+    monkeypatch.setattr(openalex_client.OpenAlexClient, "_get", openalex_get)
+    monkeypatch.setattr(scopus_client, "load_api_keys", lambda: ("k", None))
+    monkeypatch.setattr(openalex_client, "load_api_key", lambda: "k")
+
+    assert main(["--data-dir", str(tmp_path), "diagnose-seeds", str(qpath), "--db", "scopus"]) == 0
+    text = (tmp_path / "reports" / f"{qid}.seeds.scopus.md").read_text(encoding="utf-8")
+    assert "diagnosing 2 missed seeds expected from Scopus" in text and "I1" not in text
+    assert "- in Scopus: 2014 · Review (re) · IJEPES · 2-s2.0-9" in text
+    assert "| secondary_research | survey | review | — | match |" in text
+    assert "| domain | advanced metering infrastructure | smart meter | — | match |" in text
+    assert "| privacy | — | — | — | **no match** |" in text
+    assert "**verdict: terminology miss**: no term of ['privacy']" in text
+    assert "- **not indexed in Scopus**" in text and "- in Scopus, terminology miss: 1" in text
+    with open(tmp_path / "runs.csv", encoding="utf-8") as fh:
+        log = [(r["run_id"], r["db"], r["querytext"], r["returned"]) for r in csv.DictReader(fh)]
+    assert log == [("lookup", "scopus", "DOI(10.1016/j.x.1)", "1"), ("lookup", "openalex", "doi:10.1016/j.x.1", "1"),
+                   ("lookup", "scopus", "DOI(10.1/none)", "0"), ("lookup", "openalex", "doi:10.1/none", "0")]
+    assert (tmp_path / "raw" / "scopus" / "lookup" / "10.1016_j.x.1.json").exists()
+    assert (tmp_path / "raw" / "openalex" / "lookup" / "10.1_none.json").exists()

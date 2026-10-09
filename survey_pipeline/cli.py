@@ -11,6 +11,7 @@ survey_pipeline command line.
     python -m survey_pipeline.cli backfill-abstracts queries/stream_a_v1.json --db scopus [--from-run 2026...Z]
     python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib /paper/bibliography.bib]
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
+    python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json --db scopus   # Scopus + OpenAlex DOI lookups
     python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
 
 All output lives under data/ (override with --data-dir):
@@ -21,6 +22,7 @@ All output lives under data/ (override with --data-dir):
     data/raw/ieee/lookup/                  raw DOI / title lookup responses
     data/normalized/<query_id>.<db>.jsonl  unified records
     data/reports/<query_id>.md             counts, variants, seed recall
+    data/reports/<query_id>.seeds.scopus.md  diagnosis of missed seeds expected from Scopus
     data/reports/<query_id>.acm.md         ACM import: overlap with the API databases, new records
     data/screening/<query_id>.csv          one row per unique record, ready for screening
     data/runs.csv                          request log (PRISMA numbers)
@@ -595,6 +597,8 @@ def cmd_diagnose_seeds(args) -> int:
     unique, _ = rec.dedupe(rows)
     report = rec.seed_recall(seeds, unique, searched)
     missing = [s for s in seeds if s["id"] in report["missing"]]
+    if args.db == "scopus":
+        return _diagnose_seeds_scopus(query, data_dir, report, missing)
 
     client = IEEEClient(load_api_key(), data_dir=args.data_dir)
     filters = query.get("filters", {})
@@ -648,6 +652,97 @@ def cmd_diagnose_seeds(args) -> int:
     lines += ["## Verdicts", ""] + [f"- {k}: {v}" for k, v in verdicts.most_common()]
     text = "\n".join(lines)
     out = data_dir / "reports" / f"{qid}.seeds.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    print(text)
+    return 0
+
+
+def _diagnose_seeds_scopus(query: dict, data_dir: Path, report: dict, missing: list[dict]) -> int:
+    """
+    For every missed seed expected from Scopus (source_db scopus or untagged):
+    one Scopus DOI(...) lookup (is it indexed; do the year / document-type
+    filters exclude it) and one OpenAlex DOI lookup (abstract and keywords,
+    which the Scopus STANDARD view does not return). Reports, per concept
+    group, the terms found in title, abstract and keywords. Both lookups are
+    logged in runs.csv; raw responses go to data/raw/<db>/lookup/.
+    Writes data/reports/<query_id>.seeds.scopus.md.
+    """
+    from .openalex_client import OpenAlexClient, load_api_key as openalex_key
+    from .scopus_client import ScopusClient, load_api_keys
+
+    qid = query["query_id"]
+    key, token = load_api_keys()
+    scopus = ScopusClient(key, token, data_dir=data_dir, view="STANDARD")
+    openalex = OpenAlexClient(openalex_key(), data_dir=data_dir)
+    filters = query.get("filters", {})
+    doctypes = filters.get("content_types", {}).get("scopus_doctypes", [])
+    todo = [s for s in missing if s.get("source_db") in ("scopus", None)]
+    lines = [f"# Seed diagnosis (Scopus): `{qid}`", "",
+             f"retrieved {report['n_found']}/{report['n_evaluated']} evaluated seeds; "
+             f"diagnosing {len(todo)} missed seeds expected from Scopus", "",
+             "Title, year and document type come from Scopus (view STANDARD). Abstract and keywords",
+             "come from OpenAlex, because STANDARD returns neither: OpenAlex keywords are",
+             "machine-assigned, not the Scopus author keywords and index terms that TITLE-ABS-KEY",
+             "searches, and an OpenAlex abstract can differ from the Scopus one.", ""]
+    verdicts = collections.Counter()
+    for s in todo:
+        lines.append(f"## {s['id']}  —  {s.get('title') or ''}")
+        if not s.get("doi"):
+            lines += ["- no DOI in seed file; cannot look up.", ""]
+            verdicts["no doi"] += 1
+            continue
+        sc, sc_raw = scopus.lookup_doi(s["doi"], query_id=qid)
+        oa, oa_raw = openalex.lookup_doi(s["doi"], query_id=qid)
+        lines.append(f"- DOI {s['doi']}; raw: {sc_raw.name} (scopus), {oa_raw.name} (openalex)")
+        excluded = []
+        if sc is None:
+            lines.append("- **not indexed in Scopus** (DOI lookup returned 0 results)")
+        else:
+            year = (sc.get("prism:coverDate") or "")[:4]
+            lines.append(f"- in Scopus: {year} · {sc.get('subtypeDescription')} ({sc.get('subtype')}) · "
+                         f"{sc.get('prism:publicationName')} · {sc.get('eid')}")
+            if doctypes and sc.get("subtype") not in doctypes:
+                excluded.append(f"document type '{sc.get('subtype')}' is outside DOCTYPE {doctypes}")
+            if year.isdigit() and not (filters.get("start_year", 0) <= int(year) <= filters.get("end_year", 9999)):
+                excluded.append(f"year {year} is outside {filters.get('start_year')}–{filters.get('end_year')}")
+        if oa is None:
+            lines.append("- not in OpenAlex: no abstract or keywords to check")
+            r = {"title": (sc or {}).get("dc:title") or s.get("title") or "", "abstract": "", "keywords": []}
+        else:
+            r = rec.normalize_openalex(oa, qid, "lookup", "lookup")
+            if sc and sc.get("dc:title"):
+                r["title"] = sc["dc:title"]
+            lines.append(f"- OpenAlex: abstract {len(r['abstract'].split())} words; "
+                         f"{len(r['keywords'])} keywords/concepts")
+        lines += ["", "| concept group | title | abstract | keywords | group |", "|---|---|---|---|---|"]
+        failed = []
+        for g, by_field in rec.field_term_matches(query, r).items():
+            ok = any(by_field.values())
+            if not ok:
+                failed.append(g)
+            cells = [", ".join(t) if t else "—" for t in by_field.values()]
+            lines.append(f"| {g} | " + " | ".join(cells) + f" | {'match' if ok else '**no match**'} |")
+        lines.append("")
+        if sc is None:
+            verdicts["not in Scopus"] += 1
+        elif excluded:
+            lines += [f"- **excluded by filter:** {e}" for e in excluded]
+            verdicts["in Scopus, excluded by filter"] += 1
+        elif failed and r["abstract"]:
+            lines.append(f"- **verdict: terminology miss**: no term of {failed} in title, abstract or keywords")
+            verdicts["in Scopus, terminology miss"] += 1
+        elif failed:
+            lines.append(f"- **verdict: no term of {failed} in the title; abstract not available to check**")
+            verdicts["in Scopus, abstract not checkable"] += 1
+        else:
+            lines.append("- verdict: all groups match on the checked text; the miss is not explained "
+                         "(Scopus abstract or index terms may differ from OpenAlex)")
+            verdicts["in Scopus, unexplained"] += 1
+        lines.append("")
+    lines += ["## Verdicts", ""] + [f"- {k}: {v}" for k, v in verdicts.most_common()]
+    text = "\n".join(lines)
+    out = data_dir / "reports" / f"{qid}.seeds.scopus.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(text, encoding="utf-8")
     print(text)
@@ -710,6 +805,8 @@ def main(argv=None) -> int:
     s = sub.add_parser("summarize"); s.add_argument("query"); s.add_argument("--bib", default=None)
     s.set_defaults(fn=cmd_summarize)
     s = sub.add_parser("diagnose-seeds"); s.add_argument("query"); s.add_argument("--bib", default=None)
+    s.add_argument("--db", default="ieee", choices=["ieee", "scopus"],
+                   help="scopus: Scopus + OpenAlex DOI lookups for missed seeds expected from Scopus")
     s.set_defaults(fn=cmd_diagnose_seeds)
     s = sub.add_parser("lookup"); g = s.add_mutually_exclusive_group(required=True)
     g.add_argument("--doi"); g.add_argument("--title")
