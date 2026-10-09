@@ -574,3 +574,82 @@ def test_import_acm_run_dir_rejects_bad_input(tmp_path):
     with pytest.raises(SystemExit):
         main(base + ["--file", "x.bib", "--run-dir", str(run_dir), "--hit-count", "1"])
     assert not (tmp_path / "runs.csv").exists()
+
+
+def _scopus_entry(eid, title, doi=None):
+    e = {"eid": eid, "dc:title": title, "prism:coverDate": "2022-01-01", "prism:publicationName": "Energies",
+         "subtypeDescription": "Review", "dc:creator": "Doe J."}
+    if doi:
+        e["prism:doi"] = doi
+    return e
+
+
+def _openalex_work(doi, abstract=None):
+    inv = {w: [i] for i, w in enumerate(abstract.split())} if abstract else None
+    return {"id": "https://openalex.org/W1", "doi": f"https://doi.org/{doi}", "abstract_inverted_index": inv}
+
+
+def test_normalize_scopus_standard_flags_missing_abstract():
+    r = rec.normalize_scopus(_scopus_entry("2-s2.0-1", "T", "10.1/A"), "q", "run", "raw")
+    assert (r["abstract"], r["abstract_source"], r["flags"], r["doi"]) == ("", None, ["abstract_missing"], "10.1/a")
+    r2 = rec.normalize_scopus({**_scopus_entry("2-s2.0-2", "T"), "dc:description": "An abstract."}, "q", "run", "raw")
+    assert (r2["abstract_source"], r2["flags"]) == ("scopus", [])
+
+
+def test_backfill_abstracts_fills_by_doi_and_keeps_missing_flag():
+    rows = [rec.normalize_scopus(_scopus_entry(f"e{i}", "T", d), "q", "run", "raw")
+            for i, d in enumerate(["10.1/a", "10.1/b", None])]
+    works = [_openalex_work("10.1/A", "smart meter privacy survey"), _openalex_work("10.1/b")]
+    counts = rec.backfill_abstracts(rows, works)
+    assert counts == {"records": 3, "filled": 1, "missing": 2, "no_doi": 1}
+    assert (rows[0]["abstract"], rows[0]["abstract_source"], rows[0]["flags"]) == \
+        ("smart meter privacy survey", "openalex_backfill", [])
+    assert rows[1]["flags"] == ["abstract_missing"] and rows[2]["flags"] == ["abstract_missing"]
+    assert rows[1]["abstract_source"] is None
+
+
+def test_backfill_command_saves_raw_logs_and_replays(tmp_path, monkeypatch):
+    from survey_pipeline import openalex_client
+    q = json.loads(QUERY.read_text())
+    qid = q["query_id"]
+    rows = [rec.normalize_scopus(_scopus_entry(f"2-s2.0-{i}", f"Smart meter privacy survey {i}", d), qid, "r", "raw")
+            for i, d in enumerate(["10.1/a", "10.1/b", None])]
+    (tmp_path / "normalized").mkdir()
+    norm = tmp_path / "normalized" / f"{qid}.scopus.jsonl"
+    norm.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    calls = []
+
+    def fake_get(self, params):
+        calls.append(params)
+        return {"meta": {"count": 2}, "results": [_openalex_work("10.1/a", "We survey privacy in smart metering."),
+                                                  _openalex_work("10.1/b")]}, 200
+    monkeypatch.setattr(openalex_client.OpenAlexClient, "_get", fake_get)
+    monkeypatch.setattr(openalex_client, "load_api_key", lambda: "test-key")
+    monkeypatch.setattr("survey_pipeline.cli.time.sleep", lambda s: None)
+
+    assert main(["--data-dir", str(tmp_path), "backfill-abstracts", str(QUERY), "--db", "scopus"]) == 0
+    assert len(calls) == 1 and calls[0]["filter"] == "doi:10.1/a|10.1/b"     # no-DOI record is not sent
+    with open(tmp_path / "runs.csv", encoding="utf-8") as fh:
+        log = list(csv.DictReader(fh))
+    assert [(r["db"], r["content_type"], r["returned"], r["status"]) for r in log] == \
+        [("openalex", "abstract_backfill", "2", "200")]
+    run_id = log[0]["run_id"]
+    assert (tmp_path / "raw" / "openalex" / "backfill" / run_id / "batch_s000000.json").exists()
+    out = [json.loads(l) for l in norm.read_text().splitlines()]
+    assert [r["abstract_source"] for r in out] == ["openalex_backfill", None, None]
+    assert [r["flags"] for r in out] == [[], ["abstract_missing"], ["abstract_missing"]]
+
+    norm.write_text("".join(json.dumps(r) + "\n" for r in rows))          # as after re-normalizing
+    assert main(["--data-dir", str(tmp_path), "backfill-abstracts", str(QUERY), "--db", "scopus",
+                 "--from-run", run_id]) == 0
+    assert len(calls) == 1                                                # replay sends nothing
+    assert [json.loads(l)["abstract_source"] for l in norm.read_text().splitlines()][0] == "openalex_backfill"
+
+    assert main(["--data-dir", str(tmp_path), "summarize", str(QUERY)]) == 0
+    report = (tmp_path / "reports" / f"{qid}.md").read_text(encoding="utf-8")
+    assert "- scopus records: 3\n- abstracts filled from OpenAlex by DOI: 1\n" \
+           "- abstracts still missing (flag abstract_missing): 2 (1 without DOI, 1 with a DOI" in report
+    with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8") as fh:
+        sheet = {r["record_id"]: r for r in csv.DictReader(fh)}
+    assert sheet["scopus:2-s2.0-0"]["abstract_source"] == "openalex_backfill"
+    assert sheet["scopus:2-s2.0-1"]["flags"] == "abstract_missing"

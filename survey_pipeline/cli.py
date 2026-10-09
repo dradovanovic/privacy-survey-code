@@ -8,6 +8,7 @@ survey_pipeline command line.
     python -m survey_pipeline.cli normalize queries/stream_a_v1.json --db ieee|scopus|openalex --run-id 2026...Z
     python -m survey_pipeline.cli import    queries/stream_a_v1.json --db acm --file acm1.bib [acm2.bib ...] --hit-count N
     python -m survey_pipeline.cli import    queries/stream_a_v1.json --db acm --run-dir data/raw/acm/stream-a-v1/<run_id>
+    python -m survey_pipeline.cli backfill-abstracts queries/stream_a_v1.json --db scopus [--from-run 2026...Z]
     python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib /paper/bibliography.bib]
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
     python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
@@ -16,6 +17,7 @@ All output lives under data/ (override with --data-dir):
     data/compiled/<query_id>.md            compiled strings for every database (supplement material)
     data/raw/<db>/<query_id>/<run_id>/     every raw API page, untouched
     data/raw/acm/<query_id>/<run_id>/      imported ACM DL BibTeX exports, untouched
+    data/raw/openalex/backfill/<run_id>/   raw OpenAlex DOI-batch responses (abstract backfill)
     data/raw/ieee/lookup/                  raw DOI / title lookup responses
     data/normalized/<query_id>.<db>.jsonl  unified records
     data/reports/<query_id>.md             counts, variants, seed recall
@@ -31,6 +33,7 @@ import collections
 import csv
 import json
 import sys
+import time
 from pathlib import Path
 
 from . import query_compiler as qc
@@ -387,6 +390,77 @@ def _write_import_report(data_dir: Path, qid: str, db: str, run_id: str, n_files
 
 
 # ----------------------------------------------------------------------------
+# backfill-abstracts
+# ----------------------------------------------------------------------------
+
+def cmd_backfill_abstracts(args) -> int:
+    """
+    Fill empty abstracts of a database's normalized records from OpenAlex by
+    DOI (Scopus STANDARD view returns none, DECISION.md D15). DOIs are sent in
+    batches (filter=doi:a|b|...); each response is saved under
+    data/raw/openalex/backfill/<run_id>/ and logged in runs.csv. --from-run
+    replays a saved backfill run without requests, e.g. after re-normalizing.
+    Rewrites data/normalized/<query_id>.<db>.jsonl in place.
+    """
+    from .openalex_client import DOI_BATCH, OpenAlexClient, load_api_key, page_items
+    from .ieee_client import new_run_id
+
+    query = qc.load_query(args.query)
+    qid = query["query_id"]
+    data_dir = Path(args.data_dir)
+    path = data_dir / "normalized" / f"{qid}.{args.db}.jsonl"
+    rows = _jsonl_read(path)
+    if not rows:
+        print(f"no normalized records in {path}; run `search` first", file=sys.stderr)
+        return 2
+
+    works: list[dict] = []
+    if args.from_run:
+        run_id = args.from_run
+        raw_dir = data_dir / "raw" / "openalex" / "backfill" / run_id
+        pages = sorted(raw_dir.glob("batch_*.json"))
+        if not pages:
+            print(f"no saved backfill responses in {raw_dir}", file=sys.stderr)
+            return 2
+        for p in pages:
+            works += page_items(json.loads(p.read_text(encoding="utf-8")))
+        print(f"replaying backfill run {run_id}: {len(pages)} saved responses, no requests")
+    else:
+        run_id = new_run_id()
+        dois = sorted({r["doi"] for r in rows if r.get("doi") and not r.get("abstract")})
+        sleep = float(query.get("retrieval", {}).get("sleep_seconds", 1.0))
+        client = OpenAlexClient(load_api_key(), data_dir=data_dir, sleep_seconds=sleep)
+        for start in range(0, len(dois), DOI_BATCH):
+            body, raw = client.works_by_doi(dois[start:start + DOI_BATCH], qid, run_id, start)
+            works += page_items(body)
+            print(f"  DOIs {start + 1}-{min(start + DOI_BATCH, len(dois))}: "
+                  f"{len(page_items(body))} works -> {raw.name}")
+            time.sleep(client.sleep)
+        print(f"backfill run {run_id}: {len(dois)} DOIs, {len(works)} works")
+
+    counts = rec.backfill_abstracts(rows, works)
+    _jsonl_write(path, rows)
+    print(f"{args.db} records: {counts['records']}; abstracts filled: {counts['filled']}; "
+          f"still missing: {counts['missing']} ({counts['no_doi']} without DOI) -> {path}")
+    return 0
+
+
+def _backfill_lines(all_rows: list[dict]) -> list[str]:
+    """Report lines: per database whose records carry abstract_source, filled and missing abstracts."""
+    lines = []
+    for db in sorted({r["db"] for r in all_rows if "abstract_source" in r}):
+        rows = [r for r in all_rows if r["db"] == db]
+        filled = sum(1 for r in rows if r.get("abstract_source") == "openalex_backfill")
+        missing = [r for r in rows if not r.get("abstract")]
+        no_doi = sum(1 for r in missing if not r.get("doi"))
+        lines += [f"- {db} records: {len(rows)}",
+                  f"- abstracts filled from OpenAlex by DOI: {filled}",
+                  f"- abstracts still missing (flag abstract_missing): {len(missing)} "
+                  f"({no_doi} without DOI, {len(missing) - no_doi} with a DOI that OpenAlex has no abstract for)"]
+    return lines
+
+
+# ----------------------------------------------------------------------------
 # summarize
 # ----------------------------------------------------------------------------
 
@@ -446,6 +520,9 @@ def cmd_summarize(args) -> int:
     lines += [f"- {y}: {per_year[y]}" for y in sorted(k for k in per_year if k)]
     lines += ["", "## Top venues", ""]
     lines += [f"- {v}: {n}" for v, n in venues]
+    backfill = _backfill_lines(all_rows)
+    if backfill:
+        lines += ["", "## Abstract backfill (OpenAlex by DOI)", ""] + backfill
     if variant_counts:
         lines += ["", "## Sensitivity variants (unique records still matching)", ""]
         lines += [f"- {k}: {v}" for k, v in variant_counts.items()]
@@ -469,7 +546,7 @@ def cmd_summarize(args) -> int:
     scr = data_dir / "screening" / f"{qid}.csv"
     scr.parent.mkdir(parents=True, exist_ok=True)
     cols = ["record_id", "db", "doi", "year", "content_type", "venue", "title", "abstract",
-            "keywords", "citing_count", "url", "local_match", "venue_match",
+            "abstract_source", "flags", "keywords", "citing_count", "url", "local_match", "venue_match",
             "decision", "criteria", "rationale", "screener"]
     with open(scr, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=cols)
@@ -481,6 +558,10 @@ def cmd_summarize(args) -> int:
                 "record_id": r["record_id"], "db": r["db"], "doi": r.get("doi") or "",
                 "year": r.get("year") or "", "content_type": r.get("content_type") or "",
                 "venue": r.get("venue") or "", "title": r["title"], "abstract": r["abstract"],
+                "abstract_source": r.get("abstract_source") or (r["db"] if r["abstract"] else ""),
+                "flags": "; ".join((r.get("flags") or [])
+                                   + (["abstract_missing"] if not r["abstract"]
+                                      and "abstract_missing" not in (r.get("flags") or []) else [])),
                 "keywords": "; ".join(r.get("keywords") or []), "citing_count": r.get("citing_count") or "",
                 "url": r.get("url") or "", "local_match": int(r["record_id"] in ok_ids),
                 "venue_match": int(r["record_id"] in venue_ids),
@@ -622,6 +703,10 @@ def main(argv=None) -> int:
                         "required with --file, read from params.json with --run-dir")
     s.add_argument("--bib", default=None, help="paper .bib for resolving key: seeds, as in summarize")
     s.set_defaults(fn=cmd_import)
+    s = sub.add_parser("backfill-abstracts", help="fill empty abstracts from OpenAlex by DOI")
+    s.add_argument("query"); s.add_argument("--db", default="scopus", choices=API_DBS)
+    s.add_argument("--from-run", default=None, help="replay saved responses of this backfill run_id")
+    s.set_defaults(fn=cmd_backfill_abstracts)
     s = sub.add_parser("summarize"); s.add_argument("query"); s.add_argument("--bib", default=None)
     s.set_defaults(fn=cmd_summarize)
     s = sub.add_parser("diagnose-seeds"); s.add_argument("query"); s.add_argument("--bib", default=None)

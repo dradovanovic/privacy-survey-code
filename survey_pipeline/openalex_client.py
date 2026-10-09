@@ -35,6 +35,7 @@ from .ieee_client import RUN_LOG_HEADER, new_run_id
 
 BASE_URL = "https://api.openalex.org/works"
 MAX_PAGE = 100
+DOI_BATCH = 50   # DOIs per filter=doi:a|b|... request; OpenAlex allows up to 100 OR values, 50 keeps URLs short
 
 
 def load_api_key() -> str:
@@ -99,6 +100,38 @@ class OpenAlexClient:
     def _log(self, row: dict) -> None:
         with open(self.run_log, "a", newline="", encoding="utf-8") as fh:
             csv.DictWriter(fh, fieldnames=RUN_LOG_HEADER).writerow(row)
+
+    # ------------------------------------------------------------ DOI batch
+    def works_by_doi(self, dois: list[str], query_id: str, run_id: str,
+                     start: int = 0) -> tuple[dict, Path]:
+        """
+        One logged request for up to DOI_BATCH works by DOI (filter=doi:a|b|...).
+        The raw response is written to data/raw/openalex/backfill/<run_id>/
+        before it is parsed. runs.csv content_type is "abstract_backfill", so
+        these rows are not counted as search results.
+        """
+        if not 0 < len(dois) <= DOI_BATCH:
+            raise ValueError(f"1 to {DOI_BATCH} DOIs per request")
+        bad = [d for d in dois if "," in d or "|" in d]
+        if bad:
+            raise ValueError(f"DOIs containing ',' or '|' cannot go into a filter: {bad}")
+        flt = "doi:" + "|".join(dois)
+        body, status = self._get({"filter": flt, "per-page": MAX_PAGE})
+        raw_dir = self.data_dir / "raw" / "openalex" / "backfill" / run_id
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = raw_dir / f"batch_s{start:06d}.json"
+        raw_path.write_text(json.dumps(body, indent=1), encoding="utf-8")
+        self._log({
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "run_id": run_id, "db": "openalex", "query_id": query_id,
+            "content_type": "abstract_backfill", "start_record": start, "max_records": len(dois),
+            "returned": len(page_items(body)) if status == 200 else 0,
+            "total_records": page_total(body) if status == 200 else "",
+            "status": status, "querytext": flt,
+        })
+        if status != 200:
+            raise RuntimeError(f"OpenAlex API returned {status}: {body}")
+        return body, raw_path
 
     # --------------------------------------------------------------- search
     def search(self, query_id: str, params: dict, run_id: str | None = None,

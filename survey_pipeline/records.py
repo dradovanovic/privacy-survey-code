@@ -25,6 +25,8 @@ citing_count   int or null
 url            html landing page
 pdf_url        str or null
 raw_path       file the raw item came from (for audit)
+abstract_source  Scopus only: "scopus", "openalex_backfill" (filled by DOI), or null
+flags          Scopus only: ["abstract_missing"] while the abstract is empty
 """
 
 from __future__ import annotations
@@ -98,6 +100,7 @@ def normalize_scopus(item: dict, query_id: str, run_id: str, raw_path: str) -> d
     except (TypeError, ValueError):
         cited = None
     url = next((l.get("@href") for l in item.get("link") or [] if l.get("@ref") == "scopus"), None)
+    abstract = (item.get("dc:description") or "").strip()
     return {
         "record_id": f"scopus:{item.get('eid')}",
         "db": "scopus",
@@ -105,7 +108,9 @@ def normalize_scopus(item: dict, query_id: str, run_id: str, raw_path: str) -> d
         "run_id": run_id,
         "doi": _clean_doi(item.get("prism:doi")),
         "title": (item.get("dc:title") or "").strip(),
-        "abstract": (item.get("dc:description") or "").strip(),
+        "abstract": abstract,
+        "abstract_source": "scopus" if abstract else None,
+        "flags": [] if abstract else ["abstract_missing"],
         "year": year,
         "venue": item.get("prism:publicationName"),
         "content_type": item.get("subtypeDescription"),
@@ -116,6 +121,34 @@ def normalize_scopus(item: dict, query_id: str, run_id: str, raw_path: str) -> d
         "pdf_url": None,
         "raw_path": raw_path,
     }
+
+
+def backfill_abstracts(rows: list[dict], works: Iterable[dict], source: str = "openalex_backfill") -> dict:
+    """
+    Fill empty abstracts in `rows` (in place) from OpenAlex works matched by
+    DOI. A filled row gets abstract_source=`source` and loses the
+    abstract_missing flag; a row with no DOI, or whose DOI has no OpenAlex
+    abstract, keeps abstract_missing. Returns the counts for the report.
+    """
+    by_doi: dict[str, str] = {}
+    for w in works:
+        doi, text = _clean_doi(w.get("doi")), openalex_abstract(w.get("abstract_inverted_index"))
+        if doi and text and doi not in by_doi:
+            by_doi[doi] = text
+    filled = 0
+    for r in rows:
+        if r.get("abstract"):
+            continue
+        text = by_doi.get(r.get("doi") or "")
+        if text:
+            r["abstract"], r["abstract_source"] = text, source
+            r["flags"] = [f for f in r.get("flags") or [] if f != "abstract_missing"]
+            filled += 1
+        elif "abstract_missing" not in (r.get("flags") or []):
+            r["flags"] = (r.get("flags") or []) + ["abstract_missing"]
+    return {"records": len(rows), "filled": filled,
+            "missing": sum(1 for r in rows if not r.get("abstract")),
+            "no_doi": sum(1 for r in rows if not r.get("abstract") and not r.get("doi"))}
 
 
 _BIB_START = re.compile(r"@\s*(\w+)\s*\{")
