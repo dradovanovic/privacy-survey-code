@@ -9,6 +9,7 @@ survey_pipeline command line.
     python -m survey_pipeline.cli import    queries/stream_a_v1.json --db acm --file acm1.bib [acm2.bib ...] --hit-count N
     python -m survey_pipeline.cli import    queries/stream_a_v1.json --db acm --run-dir data/raw/acm/stream-a-v1/<run_id>
     python -m survey_pipeline.cli backfill-abstracts queries/stream_a_v1.json --db scopus [--from-run 2026...Z]
+    python -m survey_pipeline.cli backfill-abstracts queries/stream_a_v1.json --db all --sources crossref,semanticscholar
     python -m survey_pipeline.cli summarize queries/stream_a_v1.json [--bib /paper/bibliography.bib]
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json --db scopus   # Scopus + OpenAlex DOI lookups
@@ -19,6 +20,8 @@ All output lives under data/ (override with --data-dir):
     data/raw/<db>/<query_id>/<run_id>/     every raw API page, untouched
     data/raw/acm/<query_id>/<run_id>/      imported ACM DL BibTeX exports, untouched
     data/raw/openalex/backfill/<run_id>/   raw OpenAlex DOI-batch responses (abstract backfill)
+    data/raw/crossref/backfill/<run_id>/   raw Crossref works/{doi} responses (abstract backfill)
+    data/raw/semanticscholar/backfill/<run_id>/  raw Semantic Scholar paper/batch responses + request ids
     data/raw/ieee/lookup/                  raw DOI / title lookup responses
     data/normalized/<query_id>.<db>.jsonl  unified records
     data/reports/<query_id>.md             counts, variants, seed recall
@@ -395,70 +398,162 @@ def _write_import_report(data_dir: Path, qid: str, db: str, run_id: str, n_files
 # backfill-abstracts
 # ----------------------------------------------------------------------------
 
-def cmd_backfill_abstracts(args) -> int:
-    """
-    Fill empty abstracts of a database's normalized records from OpenAlex by
-    DOI (Scopus STANDARD view returns none, DECISION.md D15). DOIs are sent in
-    batches (filter=doi:a|b|...); each response is saved under
-    data/raw/openalex/backfill/<run_id>/ and logged in runs.csv. --from-run
-    replays a saved backfill run without requests, e.g. after re-normalizing.
-    Rewrites data/normalized/<query_id>.<db>.jsonl in place.
-    """
+BACKFILL_SOURCES = ("openalex", "crossref", "semanticscholar")
+SOURCE_LABEL = {"openalex": "openalex_backfill", "crossref": "crossref", "semanticscholar": "semantic_scholar"}
+
+
+def _openalex_abstracts(dois, qid, run_id, data_dir, query, replay):
     from .openalex_client import DOI_BATCH, OpenAlexClient, load_api_key, page_items
-    from .ieee_client import new_run_id
-
-    query = qc.load_query(args.query)
-    qid = query["query_id"]
-    data_dir = Path(args.data_dir)
-    path = data_dir / "normalized" / f"{qid}.{args.db}.jsonl"
-    rows = _jsonl_read(path)
-    if not rows:
-        print(f"no normalized records in {path}; run `search` first", file=sys.stderr)
-        return 2
-
+    raw_dir = data_dir / "raw" / "openalex" / "backfill" / run_id
     works: list[dict] = []
-    if args.from_run:
-        run_id = args.from_run
-        raw_dir = data_dir / "raw" / "openalex" / "backfill" / run_id
-        pages = sorted(raw_dir.glob("batch_*.json"))
-        if not pages:
-            print(f"no saved backfill responses in {raw_dir}", file=sys.stderr)
-            return 2
-        for p in pages:
+    if replay:
+        for p in sorted(raw_dir.glob("batch_*.json")):
             works += page_items(json.loads(p.read_text(encoding="utf-8")))
-        print(f"replaying backfill run {run_id}: {len(pages)} saved responses, no requests")
     else:
-        run_id = new_run_id()
-        dois = sorted({r["doi"] for r in rows if r.get("doi") and not r.get("abstract")})
         sleep = float(query.get("retrieval", {}).get("sleep_seconds", 1.0))
         client = OpenAlexClient(load_api_key(), data_dir=data_dir, sleep_seconds=sleep)
         for start in range(0, len(dois), DOI_BATCH):
             body, raw = client.works_by_doi(dois[start:start + DOI_BATCH], qid, run_id, start)
             works += page_items(body)
-            print(f"  DOIs {start + 1}-{min(start + DOI_BATCH, len(dois))}: "
+            print(f"  openalex DOIs {start + 1}-{min(start + DOI_BATCH, len(dois))}: "
                   f"{len(page_items(body))} works -> {raw.name}")
             time.sleep(client.sleep)
-        print(f"backfill run {run_id}: {len(dois)} DOIs, {len(works)} works")
+    return rec.openalex_abstracts_by_doi(works), {}
 
-    counts = rec.backfill_abstracts(rows, works)
-    _jsonl_write(path, rows)
-    print(f"{args.db} records: {counts['records']}; abstracts filled: {counts['filled']}; "
-          f"still missing: {counts['missing']} ({counts['no_doi']} without DOI) -> {path}")
+
+def _crossref_abstracts(dois, qid, run_id, data_dir, query, replay):
+    from urllib.parse import unquote
+    from .crossref_client import CrossrefClient, load_mailto, work_message
+    raw_dir = data_dir / "raw" / "crossref" / "backfill" / run_id
+    msgs: dict[str, dict | None] = {}
+    if replay:
+        for p in sorted(raw_dir.glob("*.json")):
+            msgs[unquote(p.name[:-len(".json")])] = work_message(json.loads(p.read_text(encoding="utf-8")))
+    else:
+        client = CrossrefClient(load_mailto(), data_dir=data_dir)
+        for i, doi in enumerate(dois):
+            msgs[doi], _ = client.work(doi, qid, run_id, i)
+            time.sleep(client.sleep)
+        print(f"  crossref: {len(dois)} DOIs, {sum(1 for m in msgs.values() if m)} registered")
+    texts = {d: rec.jats_to_text(m.get("abstract")) for d, m in msgs.items() if m and m.get("abstract")}
+    pubs = {d: m["publisher"] for d, m in msgs.items() if m and m.get("publisher")}
+    return {d: t for d, t in texts.items() if t}, pubs
+
+
+def _semanticscholar_abstracts(dois, qid, run_id, data_dir, query, replay):
+    from .semanticscholar_client import BATCH_MAX, SemanticScholarClient, abstracts_by_doi, load_api_key
+    raw_dir = data_dir / "raw" / "semanticscholar" / "backfill" / run_id
+    by_doi: dict[str, str] = {}
+    if replay:
+        for req in sorted(raw_dir.glob("batch_*.request.json")):
+            body = json.loads(req.with_name(req.name.replace(".request.json", ".json")).read_text(encoding="utf-8"))
+            if isinstance(body, list):          # an error response (e.g. 403) is saved as an object; skip it
+                by_doi.update(abstracts_by_doi(json.loads(req.read_text(encoding="utf-8"))["ids"], body))
+    else:
+        client = SemanticScholarClient(load_api_key(), data_dir=data_dir)
+        for start in range(0, len(dois), BATCH_MAX):
+            body, ids, raw = client.batch(dois[start:start + BATCH_MAX], qid, run_id, start)
+            by_doi.update(abstracts_by_doi(ids, body))
+            print(f"  semanticscholar DOIs {start + 1}-{min(start + BATCH_MAX, len(dois))}: "
+                  f"{sum(1 for p in body if p)} papers -> {raw.name}")
+    return by_doi, {}
+
+
+BACKFILL_FETCH = {"openalex": _openalex_abstracts, "crossref": _crossref_abstracts,
+                  "semanticscholar": _semanticscholar_abstracts}
+
+
+def _missing_by_publisher(rows: list[dict]) -> collections.Counter:
+    """Records still needing an abstract, by Crossref publisher, else DOI prefix, else 'no DOI'."""
+    return collections.Counter(
+        r.get("publisher") or (f"publisher unknown (DOI prefix {r['doi'].split('/')[0]})" if r.get("doi") else "no DOI")
+        for r in rows if rec.needs_abstract(r))
+
+
+def cmd_backfill_abstracts(args) -> int:
+    """
+    Fill missing abstracts by DOI from the sources in --sources, in order;
+    each source is asked only for the DOIs still missing after the previous
+    one. --db <name> targets that database's normalized records (default:
+    scopus from OpenAlex, DECISION.md D15); --db all targets every screening-
+    sheet record flagged abstract_missing (unique records after dedupe),
+    whatever its database. Raw responses go to data/raw/<source>/backfill/
+    <run_id>/ and every request is logged in runs.csv as abstract_backfill;
+    one run_id covers all sources of an invocation. A filled record gets
+    abstract_source openalex_backfill / crossref / semantic_scholar;
+    abstract_missing is cleared only at >= 30 words. --from-run replays a
+    saved run without requests, e.g. after re-normalizing. Rewrites the
+    affected data/normalized/<query_id>.<db>.jsonl files in place.
+    """
+    from .ieee_client import new_run_id
+
+    sources = [s.strip() for s in args.sources.split(",") if s.strip()]
+    bad = [s for s in sources if s not in BACKFILL_SOURCES]
+    if bad or not sources:
+        print(f"--sources must be a comma list of {', '.join(BACKFILL_SOURCES)}; got {args.sources}", file=sys.stderr)
+        return 2
+    query = qc.load_query(args.query)
+    qid = query["query_id"]
+    data_dir = Path(args.data_dir)
+    all_rows, _ = _load_normalized(data_dir, qid)
+    rows = rec.dedupe(all_rows)[0] if args.db == "all" else [r for r in all_rows if r["db"] == args.db]
+    if not rows:
+        print(f"no normalized records for {qid} / {args.db}; run `search` first", file=sys.stderr)
+        return 2
+    targets = [r for r in rows if rec.needs_abstract(r)]
+    run_id = args.from_run or new_run_id()
+    print(f"backfill run {run_id} ({'replay, no requests' if args.from_run else 'live'}): "
+          f"{len(targets)} records need an abstract ({sum(1 for r in targets if r.get('doi'))} with DOI)")
+
+    filled: dict[str, int] = {}
+    for src in sources:
+        dois = sorted({r["doi"] for r in targets if r.get("doi") and rec.needs_abstract(r)})
+        if args.from_run and not (data_dir / "raw" / src / "backfill" / run_id).is_dir():
+            print(f"  {src}: no saved responses for run {run_id}; skipped")
+            continue
+        if not args.from_run and not dois:
+            filled[src] = 0
+            continue
+        by_doi, pubs = BACKFILL_FETCH[src](dois, qid, run_id, data_dir, query, bool(args.from_run))
+        for r in targets:
+            if r.get("doi") in pubs:
+                r["publisher"] = pubs[r["doi"]]
+        filled[src] = rec.fill_abstracts(targets, by_doi, SOURCE_LABEL[src])
+        print(f"  {src}: {len(dois)} DOIs asked, {filled[src]} abstracts filled")
+
+    for db in sorted({r["db"] for r in targets}):
+        _jsonl_write(data_dir / "normalized" / f"{qid}.{db}.jsonl", [r for r in all_rows if r["db"] == db])
+    still = [r for r in targets if rec.needs_abstract(r)]
+    print(f"filled per source: {', '.join(f'{s} {n}' for s, n in filled.items()) or '-'}; "
+          f"still missing (abstract_missing): {len(still)} of {len(targets)} "
+          f"({sum(1 for r in still if not r.get('doi'))} without DOI)")
+    for name, n in _missing_by_publisher(still).most_common():
+        print(f"    {name}: {n}")
     return 0
 
 
-def _backfill_lines(all_rows: list[dict]) -> list[str]:
-    """Report lines: per database whose records carry abstract_source, filled and missing abstracts."""
-    lines = []
-    for db in sorted({r["db"] for r in all_rows if "abstract_source" in r}):
+def _backfill_lines(all_rows: list[dict], unique: list[dict]) -> list[str]:
+    """Report lines: abstracts filled per backfill source and still missing, per database and on the sheet."""
+    labels = list(SOURCE_LABEL.values())
+    if not any(r.get("abstract_source") in labels or r.get("flags") for r in all_rows):
+        return []
+    lines = ["Per database (all normalized records, before dedupe):", ""]
+    for db in sorted({r["db"] for r in all_rows}):
         rows = [r for r in all_rows if r["db"] == db]
-        filled = sum(1 for r in rows if r.get("abstract_source") == "openalex_backfill")
-        missing = [r for r in rows if not r.get("abstract")]
-        no_doi = sum(1 for r in missing if not r.get("doi"))
-        lines += [f"- {db} records: {len(rows)}",
-                  f"- abstracts filled from OpenAlex by DOI: {filled}",
-                  f"- abstracts still missing (flag abstract_missing): {len(missing)} "
-                  f"({no_doi} without DOI, {len(missing) - no_doi} with a DOI that OpenAlex has no abstract for)"]
+        by_src = collections.Counter(r.get("abstract_source") for r in rows if r.get("abstract_source") in labels)
+        missing = [r for r in rows if rec.needs_abstract(r)]
+        lines.append(f"- {db} records: {len(rows)}; filled: "
+                     + (", ".join(f"{s} {by_src[s]}" for s in labels if by_src[s]) or "none")
+                     + f"; still missing (abstract_missing): {len(missing)} "
+                     f"({sum(1 for r in missing if not r.get('doi'))} without DOI)")
+    by_src = collections.Counter(r.get("abstract_source") for r in unique if r.get("abstract_source") in labels)
+    missing = [r for r in unique if rec.needs_abstract(r)]
+    lines += ["", "Screening sheet (unique records):", "",
+              "- filled by backfill: " + (", ".join(f"{s} {by_src[s]}" for s in labels if by_src[s]) or "none"),
+              f"- still missing (abstract_missing): {len(missing)} "
+              f"({sum(1 for r in missing if not r.get('doi'))} without DOI)",
+              "- still missing by publisher (Crossref publisher, else DOI prefix):"]
+    lines += [f"    - {name}: {n}" for name, n in _missing_by_publisher(missing).most_common()]
     return lines
 
 
@@ -522,9 +617,9 @@ def cmd_summarize(args) -> int:
     lines += [f"- {y}: {per_year[y]}" for y in sorted(k for k in per_year if k)]
     lines += ["", "## Top venues", ""]
     lines += [f"- {v}: {n}" for v, n in venues]
-    backfill = _backfill_lines(all_rows)
+    backfill = _backfill_lines(all_rows, unique)
     if backfill:
-        lines += ["", "## Abstract backfill (OpenAlex by DOI)", ""] + backfill
+        lines += ["", "## Abstract backfill (by DOI)", ""] + backfill
     if variant_counts:
         lines += ["", "## Sensitivity variants (unique records still matching)", ""]
         lines += [f"- {k}: {v}" for k, v in variant_counts.items()]
@@ -798,8 +893,12 @@ def main(argv=None) -> int:
                         "required with --file, read from params.json with --run-dir")
     s.add_argument("--bib", default=None, help="paper .bib for resolving key: seeds, as in summarize")
     s.set_defaults(fn=cmd_import)
-    s = sub.add_parser("backfill-abstracts", help="fill empty abstracts from OpenAlex by DOI")
-    s.add_argument("query"); s.add_argument("--db", default="scopus", choices=API_DBS)
+    s = sub.add_parser("backfill-abstracts", help="fill missing abstracts by DOI (OpenAlex, Crossref, Semantic Scholar)")
+    s.add_argument("query")
+    s.add_argument("--db", default="scopus", choices=[*API_DBS, *IMPORT_DBS, "all"],
+                   help="records of one database, or all = every screening-sheet record flagged abstract_missing")
+    s.add_argument("--sources", default="openalex",
+                   help="comma list, tried in order: openalex, crossref, semanticscholar")
     s.add_argument("--from-run", default=None, help="replay saved responses of this backfill run_id")
     s.set_defaults(fn=cmd_backfill_abstracts)
     s = sub.add_parser("summarize"); s.add_argument("query"); s.add_argument("--bib", default=None)

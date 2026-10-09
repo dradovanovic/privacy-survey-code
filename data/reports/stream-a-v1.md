@@ -2,15 +2,15 @@
 
 - raw records: 2759  ({'ieee': 847, 'openalex': 924, 'scopus': 911, 'acm': 77})
 - unique after DOI/title dedupe: 1687  (dropped 1072)
-- satisfy query locally on title/abstract/keywords: 871
-- satisfy query when the venue name is included: 891 (+20 via venue, e.g. survey journals)
-- unexplained by title/abstract/keywords/venue: 796 (database-side stemming or index terms not exported)
+- satisfy query locally on title/abstract/keywords: 899
+- satisfy query when the venue name is included: 919 (+20 via venue, e.g. survey journals)
+- unexplained by title/abstract/keywords/venue: 768 (database-side stemming or index terms not exported)
 
 ## Concept groups failing locally (incl. venue), across all unique records
 
-- domain: 488
-- privacy: 391
-- secondary_research: 256
+- domain: 476
+- privacy: 365
+- secondary_research: 238
 
 ## Content types
 
@@ -68,16 +68,48 @@
 - Communications in computer and information science: 8
 - IEEE Communications Magazine: 7
 
-## Abstract backfill (OpenAlex by DOI)
+## Abstract backfill (by DOI)
 
-- scopus records: 911
-- abstracts filled from OpenAlex by DOI: 634
-- abstracts still missing (flag abstract_missing): 277 (22 without DOI, 255 with a DOI that OpenAlex has no abstract for)
+Per database (all normalized records, before dedupe):
+
+- acm records: 77; filled: none; still missing (abstract_missing): 0 (0 without DOI)
+- ieee records: 847; filled: none; still missing (abstract_missing): 0 (0 without DOI)
+- openalex records: 924; filled: semantic_scholar 31; still missing (abstract_missing): 181 (1 without DOI)
+- scopus records: 911; filled: openalex_backfill 634, semantic_scholar 11; still missing (abstract_missing): 266 (22 without DOI)
+
+Screening sheet (unique records):
+
+- filled by backfill: openalex_backfill 72, semantic_scholar 42
+- still missing (abstract_missing): 238 (15 without DOI)
+- still missing by publisher (Crossref publisher, else DOI prefix):
+    - Elsevier BV: 54
+    - Springer International Publishing: 45
+    - Springer Science and Business Media LLC: 28
+    - Springer Nature Switzerland: 24
+    - Elsevier: 22
+    - Springer Nature Singapore: 16
+    - no DOI: 15
+    - Springer Berlin Heidelberg: 9
+    - Springer Singapore: 8
+    - Springer London: 2
+    - AIP Publishing: 2
+    - publisher unknown (DOI prefix 10.1201): 2
+    - publisher unknown (DOI prefix 10.3969): 1
+    - Springer Fachmedien Wiesbaden: 1
+    - publisher unknown (DOI prefix 10.13334): 1
+    - International Information and Engineering Technology Association: 1
+    - publisher unknown (DOI prefix 10.24507): 1
+    - CRC Press: 1
+    - publisher unknown (DOI prefix 10.4018): 1
+    - WORLD SCIENTIFIC: 1
+    - Totem Publisher, Inc.: 1
+    - publisher unknown (DOI prefix 10.14445): 1
+    - Stef92 Technology: 1
 
 ## Sensitivity variants (unique records still matching)
 
-- v2_title_restricted: 323
-- v3_no_generic_grid: 351
+- v2_title_restricted: 333
+- v3_no_generic_grid: 361
 
 ## Seed recall
 

@@ -596,16 +596,21 @@ def test_normalize_scopus_standard_flags_missing_abstract():
     assert (r2["abstract_source"], r2["flags"]) == ("scopus", [])
 
 
+LONG = " ".join(f"word{i}" for i in range(32))      # 32 distinct words (an inverted index keeps one slot per word)
+
+
 def test_backfill_abstracts_fills_by_doi_and_keeps_missing_flag():
     rows = [rec.normalize_scopus(_scopus_entry(f"e{i}", "T", d), "q", "run", "raw")
-            for i, d in enumerate(["10.1/a", "10.1/b", None])]
-    works = [_openalex_work("10.1/A", "smart meter privacy survey"), _openalex_work("10.1/b")]
+            for i, d in enumerate(["10.1/a", "10.1/b", None, "10.1/c"])]
+    works = [_openalex_work("10.1/A", LONG), _openalex_work("10.1/b"), _openalex_work("10.1/c", "too short")]
     counts = rec.backfill_abstracts(rows, works)
-    assert counts == {"records": 3, "filled": 1, "missing": 2, "no_doi": 1}
-    assert (rows[0]["abstract"], rows[0]["abstract_source"], rows[0]["flags"]) == \
-        ("smart meter privacy survey", "openalex_backfill", [])
+    assert counts == {"records": 4, "filled": 2, "missing": 3, "no_doi": 1}
+    assert (rows[0]["abstract"], rows[0]["abstract_source"], rows[0]["flags"]) == (LONG, "openalex_backfill", [])
     assert rows[1]["flags"] == ["abstract_missing"] and rows[2]["flags"] == ["abstract_missing"]
     assert rows[1]["abstract_source"] is None
+    # under 30 words: filled, but abstract_missing stays
+    assert (rows[3]["abstract"], rows[3]["abstract_source"], rows[3]["flags"]) == \
+        ("too short", "openalex_backfill", ["abstract_missing"])
 
 
 def test_backfill_command_saves_raw_logs_and_replays(tmp_path, monkeypatch):
@@ -621,7 +626,7 @@ def test_backfill_command_saves_raw_logs_and_replays(tmp_path, monkeypatch):
 
     def fake_get(self, params):
         calls.append(params)
-        return {"meta": {"count": 2}, "results": [_openalex_work("10.1/a", "We survey privacy in smart metering."),
+        return {"meta": {"count": 2}, "results": [_openalex_work("10.1/a", LONG),
                                                   _openalex_work("10.1/b")]}, 200
     monkeypatch.setattr(openalex_client.OpenAlexClient, "_get", fake_get)
     monkeypatch.setattr(openalex_client, "load_api_key", lambda: "test-key")
@@ -647,8 +652,10 @@ def test_backfill_command_saves_raw_logs_and_replays(tmp_path, monkeypatch):
 
     assert main(["--data-dir", str(tmp_path), "summarize", str(QUERY)]) == 0
     report = (tmp_path / "reports" / f"{qid}.md").read_text(encoding="utf-8")
-    assert "- scopus records: 3\n- abstracts filled from OpenAlex by DOI: 1\n" \
-           "- abstracts still missing (flag abstract_missing): 2 (1 without DOI, 1 with a DOI" in report
+    assert "- scopus records: 3; filled: openalex_backfill 1; still missing (abstract_missing): 2 (1 without DOI)" \
+        in report
+    assert "- still missing by publisher (Crossref publisher, else DOI prefix):\n" \
+           "    - publisher unknown (DOI prefix 10.1): 1\n    - no DOI: 1" in report
     with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8") as fh:
         sheet = {r["record_id"]: r for r in csv.DictReader(fh)}
     assert sheet["scopus:2-s2.0-0"]["abstract_source"] == "openalex_backfill"
@@ -704,3 +711,104 @@ def test_diagnose_seeds_scopus_reports_group_matches_per_field(tmp_path, monkeyp
                    ("lookup", "scopus", "DOI(10.1/none)", "0"), ("lookup", "openalex", "doi:10.1/none", "0")]
     assert (tmp_path / "raw" / "scopus" / "lookup" / "10.1016_j.x.1.json").exists()
     assert (tmp_path / "raw" / "openalex" / "lookup" / "10.1_none.json").exists()
+
+
+def test_jats_to_text():
+    jats = ('<jats:title>Abstract</jats:title><jats:p>Smart meters &amp; <jats:italic>privacy</jats:italic>.'
+            '</jats:p><jats:sec><jats:title>Methods</jats:title><jats:p>We review.</jats:p></jats:sec>')
+    assert rec.jats_to_text(jats) == "Smart meters & privacy . Methods We review."
+    assert rec.jats_to_text(None) == ""
+
+
+def test_backfill_all_missing_crossref_then_semanticscholar(tmp_path, monkeypatch):
+    from survey_pipeline import crossref_client, semanticscholar_client
+    q = json.loads(QUERY.read_text())
+    qid = q["query_id"]
+    (tmp_path / "normalized").mkdir()
+    base = {"query_id": qid, "run_id": "r", "keywords": [], "year": 2020}
+    openalex = [{**base, "record_id": "openalex:W1", "db": "openalex", "doi": "10.1/a", "title": "A", "abstract": ""},
+                {**base, "record_id": "openalex:W2", "db": "openalex", "doi": None, "title": "No DOI", "abstract": ""},
+                {**base, "record_id": "openalex:W3", "db": "openalex", "doi": "10.9/dup", "title": "Dup", "abstract": ""}]
+    scopus = [{**base, "record_id": "scopus:1", "db": "scopus", "doi": "10.1/b", "title": "B", "abstract": "",
+               "abstract_source": None, "flags": ["abstract_missing"]},
+              {**base, "record_id": "scopus:2", "db": "scopus", "doi": "10.1/c", "title": "C", "abstract": "",
+               "abstract_source": None, "flags": ["abstract_missing"]}]
+    ieee = [{**base, "record_id": "ieee:1", "db": "ieee", "doi": "10.9/dup", "title": "Dup", "abstract": LONG}]
+    files = {"openalex": openalex, "scopus": scopus, "ieee": ieee}
+
+    def write_norm():
+        for db, rows in files.items():
+            (tmp_path / "normalized" / f"{qid}.{db}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    write_norm()
+
+    cr_calls, s2_calls = [], []
+
+    def cr_get(self, doi):
+        cr_calls.append(doi)
+        if doi == "10.1/a":
+            return {"status": "ok", "message": {"DOI": doi, "publisher": "Springer Nature",
+                                                "abstract": f"<jats:p>{LONG}</jats:p>"}}, 200
+        if doi == "10.1/b":
+            return {"status": "ok", "message": {"DOI": doi, "publisher": "Elsevier BV"}}, 200
+        return {"status": 404, "message": "Resource not found."}, 404
+
+    def s2_post(self, ids):
+        s2_calls.append(ids)
+        return [{"paperId": "p1", "abstract": LONG},
+                {"paperId": "p2", "abstract": "Ten words only here, so the flag must stay set now."}], 200
+    monkeypatch.setattr(crossref_client.CrossrefClient, "_get", cr_get)
+    monkeypatch.setattr(semanticscholar_client.SemanticScholarClient, "_post", s2_post)
+    monkeypatch.setattr(crossref_client, "load_mailto", lambda: "test@example.org")
+    monkeypatch.setattr(semanticscholar_client, "load_api_key", lambda: None)
+    monkeypatch.setattr("survey_pipeline.cli.time.sleep", lambda s: None)
+
+    args = ["--data-dir", str(tmp_path), "backfill-abstracts", str(QUERY), "--db", "all",
+            "--sources", "crossref,semanticscholar"]
+    assert main(args) == 0
+    assert cr_calls == ["10.1/a", "10.1/b", "10.1/c"]              # openalex:W3 is a dropped duplicate of ieee:1
+    assert s2_calls == [["DOI:10.1/b", "DOI:10.1/c"]]                # only what Crossref left missing
+    with open(tmp_path / "runs.csv", encoding="utf-8") as fh:
+        log = list(csv.DictReader(fh))
+    assert [(r["db"], r["content_type"], r["status"], r["querytext"]) for r in log[:3]] == [
+        ("crossref", "abstract_backfill", "200", "works/10.1/a"),
+        ("crossref", "abstract_backfill", "200", "works/10.1/b"),
+        ("crossref", "abstract_backfill", "404", "works/10.1/c")]
+    assert (log[3]["db"], log[3]["content_type"], log[3]["status"]) == ("semanticscholar", "abstract_backfill", "200")
+    assert "test@example.org" not in (tmp_path / "runs.csv").read_text(encoding="utf-8")
+    run_id = log[0]["run_id"]
+    assert {r["run_id"] for r in log} == {run_id}
+    assert (tmp_path / "raw" / "crossref" / "backfill" / run_id / "10.1%2Fc.json").exists()
+    assert (tmp_path / "raw" / "semanticscholar" / "backfill" / run_id / "batch_s000000.request.json").exists()
+
+    def load(db):
+        text = (tmp_path / "normalized" / f"{qid}.{db}.jsonl").read_text()
+        return {r["record_id"]: r for r in map(json.loads, text.splitlines())}
+
+    def check():
+        oa, sc = load("openalex"), load("scopus")
+        assert (oa["openalex:W1"]["abstract_source"], oa["openalex:W1"]["flags"], oa["openalex:W1"]["publisher"]) == \
+            ("crossref", [], "Springer Nature")
+        assert oa["openalex:W2"]["flags"] == ["abstract_missing"] and "publisher" not in oa["openalex:W2"]
+        assert "flags" not in oa["openalex:W3"]                    # not on the sheet, not touched
+        assert (sc["scopus:1"]["abstract_source"], sc["scopus:1"]["flags"], sc["scopus:1"]["publisher"]) == \
+            ("semantic_scholar", [], "Elsevier BV")
+        assert (sc["scopus:2"]["abstract_source"], sc["scopus:2"]["flags"]) == \
+            ("semantic_scholar", ["abstract_missing"])
+        assert load("ieee")["ieee:1"]["abstract"] == LONG
+    check()
+
+    write_norm()                                                      # as after re-normalizing
+    assert main(args + ["--from-run", run_id]) == 0
+    assert len(cr_calls) == 3 and len(s2_calls) == 1                  # replay sends nothing
+    check()
+
+    assert main(["--data-dir", str(tmp_path), "summarize", str(QUERY)]) == 0
+    report = (tmp_path / "reports" / f"{qid}.md").read_text(encoding="utf-8")
+    assert "- filled by backfill: crossref 1, semantic_scholar 2" in report
+    assert "- still missing (abstract_missing): 2 (1 without DOI)" in report
+    assert "    - publisher unknown (DOI prefix 10.1): 1\n" in report   # scopus:2, 404 in Crossref
+    assert "    - no DOI: 1" in report
+    with open(tmp_path / "screening" / f"{qid}.csv", encoding="utf-8") as fh:
+        sheet = {r["record_id"]: r for r in csv.DictReader(fh)}
+    assert sheet["scopus:2"]["flags"] == "abstract_missing"
+    assert sheet["scopus:2"]["abstract_source"] == "semantic_scholar"

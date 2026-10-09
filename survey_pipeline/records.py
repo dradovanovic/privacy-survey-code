@@ -25,8 +25,11 @@ citing_count   int or null
 url            html landing page
 pdf_url        str or null
 raw_path       file the raw item came from (for audit)
-abstract_source  Scopus only: "scopus", "openalex_backfill" (filled by DOI), or null
-flags          Scopus only: ["abstract_missing"] while the abstract is empty
+abstract_source  "scopus", or the backfill that filled it: "openalex_backfill", "crossref",
+               "semantic_scholar"; null when empty (absent on records never backfilled)
+flags          ["abstract_missing"] while the abstract is empty or under 30 words
+               (set by normalize_scopus and by the abstract backfill)
+publisher      Crossref publisher name, on records looked up in Crossref
 """
 
 from __future__ import annotations
@@ -123,32 +126,67 @@ def normalize_scopus(item: dict, query_id: str, run_id: str, raw_path: str) -> d
     }
 
 
-def backfill_abstracts(rows: list[dict], works: Iterable[dict], source: str = "openalex_backfill") -> dict:
+MIN_ABSTRACT_WORDS = 30   # screening spec: an abstract under 30 words counts as missing
+
+
+def needs_abstract(r: dict) -> bool:
+    """Empty abstract, or flagged abstract_missing (e.g. a backfilled abstract under MIN_ABSTRACT_WORDS)."""
+    return not r.get("abstract") or "abstract_missing" in (r.get("flags") or [])
+
+
+def fill_abstracts(rows: Iterable[dict], by_doi: dict[str, str], source: str) -> int:
     """
-    Fill empty abstracts in `rows` (in place) from OpenAlex works matched by
-    DOI. A filled row gets abstract_source=`source` and loses the
-    abstract_missing flag; a row with no DOI, or whose DOI has no OpenAlex
-    abstract, keeps abstract_missing. Returns the counts for the report.
+    Fill the rows that need an abstract (in place) from by_doi {DOI: text};
+    a text replaces an existing abstract only when it is longer. A filled row
+    gets abstract_source=`source`. abstract_missing is cleared only when the
+    abstract now has at least MIN_ABSTRACT_WORDS words, and set otherwise.
+    Returns the number of rows that received a text.
     """
+    filled = 0
+    for r in rows:
+        if not needs_abstract(r):
+            continue
+        text = by_doi.get(r.get("doi") or "")
+        if text and len(text.split()) > len((r.get("abstract") or "").split()):
+            r["abstract"], r["abstract_source"] = text, source
+            filled += 1
+        flags = [f for f in r.get("flags") or [] if f != "abstract_missing"]
+        if len((r.get("abstract") or "").split()) < MIN_ABSTRACT_WORDS:
+            flags.append("abstract_missing")
+        r["flags"] = flags
+    return filled
+
+
+def openalex_abstracts_by_doi(works: Iterable[dict]) -> dict[str, str]:
     by_doi: dict[str, str] = {}
     for w in works:
         doi, text = _clean_doi(w.get("doi")), openalex_abstract(w.get("abstract_inverted_index"))
         if doi and text and doi not in by_doi:
             by_doi[doi] = text
-    filled = 0
-    for r in rows:
-        if r.get("abstract"):
-            continue
-        text = by_doi.get(r.get("doi") or "")
-        if text:
-            r["abstract"], r["abstract_source"] = text, source
-            r["flags"] = [f for f in r.get("flags") or [] if f != "abstract_missing"]
-            filled += 1
-        elif "abstract_missing" not in (r.get("flags") or []):
-            r["flags"] = (r.get("flags") or []) + ["abstract_missing"]
+    return by_doi
+
+
+def backfill_abstracts(rows: list[dict], works: Iterable[dict], source: str = "openalex_backfill") -> dict:
+    """
+    Fill abstracts in `rows` (in place) from OpenAlex works matched by DOI
+    (fill_abstracts rules). Returns the counts for the report.
+    """
+    filled = fill_abstracts(rows, openalex_abstracts_by_doi(works), source)
     return {"records": len(rows), "filled": filled,
-            "missing": sum(1 for r in rows if not r.get("abstract")),
-            "no_doi": sum(1 for r in rows if not r.get("abstract") and not r.get("doi"))}
+            "missing": sum(1 for r in rows if needs_abstract(r)),
+            "no_doi": sum(1 for r in rows if needs_abstract(r) and not r.get("doi"))}
+
+
+_JATS_BREAK = re.compile(r"</(?:jats:)?(?:p|title|sec|list-item)>", re.IGNORECASE)
+_TAG = re.compile(r"<[^>]+>")
+
+
+def jats_to_text(jats: str | None) -> str:
+    """Crossref abstract (JATS XML) to plain text: tags dropped, entities decoded, a leading 'Abstract' heading removed."""
+    import html
+    text = html.unescape(_TAG.sub(" ", _JATS_BREAK.sub(" ", jats or "")))
+    text = re.sub(r"\s+", " ", text).strip()
+    return re.sub(r"^abstract\b[\s:.]*", "", text, flags=re.IGNORECASE).strip()
 
 
 _BIB_START = re.compile(r"@\s*(\w+)\s*\{")
