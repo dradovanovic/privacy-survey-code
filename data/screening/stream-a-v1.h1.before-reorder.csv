@@ -1,0 +1,61 @@
+n;record_id;title;h1_ta_decision;h1_ta_codes;h1_ta_note;h1_ta_at
+1;openalex:W3118831975;Artificial intelligence in sustainable energy industry: Status Quo, challenges and opportunities;exclude;A-E3;"ff-domain: AI in energy industry; no smart-meter focus; no privacy focus";10.10.2026
+2;openalex:W4389526349;Photovoltaics literature survey (No. 187);exclude;"A-E4; A-E3";"ff-domain: photovoltaics;  complete_off_topic";10.10.2026
+3;openalex:W7204641717;Machine learning-based carbon intensity estimation in smart grids with behind-the-meter distributed energy resources: A comprehensive review and future perspectives;exclude;A-E6;"privacy only in passing; no dedicated section; taxonomy branch or comparison dimension";10.10.2026
+4;ieee:8918446;A Privacy-Preserving-Framework-Based Blockchain and Deep Learning for Protecting Smart Power Networks;exclude;"A-E1; route=C";"proposes blockchain privacy preserving framework; primary study";10.10.2026
+5;ieee:11145870;Systematic Review of Big Data Applications for Sustainable Smart Campuses: Trends, Technologies, and Impact Metrics;exclude;A-E3;"off topic; no privacy";10.10.2026
+6;ieee:11341143;Leveraging Blockchain and AI for Efficent Carbon Credit Tracking and Management;exclude;A-E3;"off topic; no privacy; no smart meter data";10.10.2026
+7;openalex:W4285138760;Smart Grids and Smart Buildings;exclude;A-E3;"off topic; no privacy";10.10.2026
+8;openalex:W4416100498;Advanced Techniques for Fraud Detection in Smart Grids: A Comprehensive Review;exclude;A-E2;no privacy;10.10.2026
+9;ieee:11327670;Blockchain for Smart Energy Trading: A Comprehensive Survey of Applications, Algorithms, and Platforms;exclude;A-E3;"off topic; no privacy; no smart meter data";10.10.2026
+10;openalex:W4406145677;A review on price-driven energy management systems and demand response programs in smart grids;exclude;A-E2;no privacy;10.10.2026
+11;openalex:W2776905221;Privacy-preserving data aggregation in resource-constrained sensor nodes in Internet of Things: A review;maybe;?A-I3;"privacy preservation; privacy is handled partially; no smart meter data";10.10.2026
+12;ieee:10906448;Blockchain-Enhanced Federated Learning for Secure and Intelligent Consumer Electronics: An Overview;exclude;"A-E3;A-E2";"no smart meter data; no dedicated privacy sectino";10.10.2026
+13;ieee:6486008;Cost modeling of response actions for automated response and recovery in AMI;exclude;"A-E1;route=none";"no survey; yes AMI; no Smart Meter Data; no privacy";10.10.2026
+14;openalex:W2983145744;Blockchain in Smart Grids: A Review on Different Use Cases;maybe;?A-I3;"blockchain in smart grid survey; privacy depth unclear";10.10.2026
+15;openalex:W4376269868;Artificial intelligence and blockchain technology for secure smart grid and power distribution Automation: A State-of-the-Art Review;maybe;?A-I4;"blockchain in smart grid survey; privacy is one analyzed dimension; recoded include->maybe 2026-10-10 (user)";10.10.2026
+16;openalex:W2185824328;Computer Security Anchors in Smart Grids: The Smart Metering Scenario and Challenges;exclude;A-E2;privacy only partially addressed, no dedicated privacy section;10.10.2026
+17;ieee:10811461;Surveying the Energy Efficiency and Applicability of Blockchain Platforms for the Internet of Things;exclude;"A-E1;route=none";"no survey; off topic";10.10.2026
+18;ieee:7959167;Smart Meter Data Privacy: A Survey;include;"A-I1;A-I2;A-I3;A-I4;A-I5";"smart meter data survey; privacy is stated aim; privacy section; privacy comparison dimension";10.10.2026
+19;openalex:W3162781959;Intelligent Buildings in Smart Grids: A Survey on Security and Privacy Issues Related to Energy Management;include;"A-I1;A-I2;A-I3;A-I4;A-I5";"privacy is stated aim; privacy section; ";10.10.2026
+20;openalex:W3037652220;Blockchain-Based Mechanisms to Address IoT Security Issues: A Review;exclude;A-E3;"no privacy; noexplicit smart meter data";10.10.2026
+21;ieee:9881499;Intelligent Computing in Electrical Utility Industry 4.0: Concept, Key Technologies, Applications and Future Directions;maybe;?A-I3;"broader context; privacy mentioned;";10.10.2026
+22;openalex:W4414976878;IoT-Enabled Fog-Based Secure Aggregation in Smart Grids Supporting Data Analytics;exclude;"A-E1;route=C";"privacy preservation; privacy is stated aim; privacy taxonomy; attacker model";10.10.2026
+23;openalex:W7119096831;Artificial Intelligence (AI): An Enhancement of Environmental Sustainability During the Pandemic in the Modern Era;exclude;"A-E1; A-E3;route=none";"no survey; no privacy; no smart meter";10.10.2026
+24;ieee:7884943;Foud: Integrating Fog and Cloud for 5G-Enabled V2G Networks;exclude;"A-E3;A-E2";"no smart meter data; no dedicated privacy sectino";10.10.2026
+25;ieee:10910905;Advanced Cybersecurity: A Comprehensive Overview of an Enhanced Cybersecurity Assisted Cryptography Strategy for Protected Image Communication;exclude;A-E2;"no privacy; only cryptographic approach";10.10.2026
+26;openalex:W4410002359;A comprehensive survey on privacy-preserving technologies for Smart Grids;include;"A-I1;A-I2;A-I3;A-I4;A-I5";"privacy is stated aim; dedicated privacy section; privacy goals; attacker definition";10.10.2026
+27;ieee:6699911;The role of user interaction and acceptance in a cloud-based demand response model;exclude;"A-E1;route=none";"no privacy; no smart meter data; ";10.10.2026
+28;ieee:9042016;Smart Service Systems: Security and Privacy Challenges in Internet of Things;exclude;"A-E2; A-E3";"no privacy; no smart meter data; to broad context";10.10.2026
+29;ieee:7184914;Analytics: Key to Go from Generating Big Data to Deriving Business Value;exclude;"A-E1; A-E2;A-E3;route=none";"no privacy; no smart meter data; to broad context";10.10.2026
+30;ieee:11438745;A Unified Security Framework for Smart City AI-Systems: Cross-Domain Vulnerability Analysis and Mitigation Strategies;maybe;"?A-I3;";"privacy is partially mentioned, no smart meter context; smart city context";10.10.2026
+31;ieee:9137886;A Survey of Privacy Leakage and Security Vulnerabilities in the Internet of Things;exclude;A-E3;"privacy is partially mentioned, no smart meter context; internet of things";10.10.2026
+32;ieee:6129371;Cyber Security and Privacy Issues in Smart Grids;include;"A-I1;A-I2;A-I3;A-I4;A-I5";"privacy is stated aim; privacy section; privacy comparison dimension";10.10.2026
+33;ieee:9171089;Applications of Blockchain Technology for Smart Cities;exclude;"A-E1; A-E2;route=none";"no survey; no smart meter data; limited privacy";10.10.2026
+34;ieee:7428064;Security analysis on consumer and industrial IoT devices;exclude;"A-E1;A-E2; A-E3;route=none";"no survey; no smart meter data; no privacy";10.10.2026
+35;openalex:W2765720725;Privacy-Aware in the IoT Applications: A Systematic Literature Review;maybe;?A-I3;"privacy is stated aim; privacy comparison dimension; privacy section; recoded include->maybe 2026-10-10 (user)";10.10.2026
+36;ieee:10846249;SecureV2X: Overview of Secure Cellular based Vehicle-to-Everything Communication in Intelligent Transportation System;exclude;"A-E1; A-E2; A-E3;route=none";"no survey; no smart meter data; no privacy";10.10.2026
+37;openalex:W4413950493;A Survey of Traditional and Emerging Deep Learning Techniques for Non-Intrusive Load Monitoring;maybe;?A-I2;"nilm_only; privacy is stated aim; privacy comparison dimension; recoded include->maybe 2026-10-10 (user)";10.10.2026
+38;ieee:10271658;Automation Improvement in Cyber Risk Management;exclude;"A-E1; A-E2;route=none";"no survey; no smart meter data; no privacy";10.10.2026
+39;ieee:10812739;Blockchain-Based Reputation and Trust Management for Smart Grids, Healthcare, and Transportation: A Review;exclude; A-E2;"no privacy; only blockchain";10.10.2026
+40;openalex:W159945170;Secure Operation, Control, and Maintenance in Smart Grid Communications over Wireless Networks;exclude;"A-E1; A-E3;route=none";"no survey; no privacy; ";10.10.2026
+41;openalex:W7134136402;A survey of quantum and blockchain security solutions for IoT-based Energy Internet;maybe;?A-I3;"no smart meter, broader context with IoT; no dedicated privacy section; privacy comparison dimension";10.10.2026
+42;openalex:W4252091528;Related Work;exclude;"A-E1;route=none";"no survey; only security";10.10.2026
+43;openalex:W2549551626;A Comprehensive Survey of Privacy-Preserving in Smart Grid;maybe;?A-I3;"privacy preservation; privacy is handled partially; no smart meter data";10.10.2026
+44;ieee:9016234;Machine Learning Methods for Industrial Protocol Security Analysis: Issues, Taxonomy, and Directions;exclude;" A-E2; A-E3";"no smart meter data; no privacy";10.10.2026
+45;ieee:9475171;A New Distributed, Decentralized Privacy-Preserving ID Registration System;exclude;"A-E3;A-E2";"no smart meter data; no dedicated privacy sectino";10.10.2026
+46;openalex:W3103436608;Prospects of Appliance-Level Load Monitoring in Off-the-Shelf Energy Monitors: A Technical Review;exclude; A-E2;"no privacy; only NILM";10.10.2026
+47;ieee:9594795;Differential Privacy for IoT-Enabled Critical Infrastructure: A Comprehensive Survey;maybe;?A-I3;"privacy preservation, attacks on differential privacy, privacy comparison dimensino, no smart meter context, high level IoT; recoded include->maybe 2026-10-10 (user)";10.10.2026
+48;openalex:W2808710202;Traditional Vs Smart Electricity Metering Systems: A Brief Overview;exclude;"A-E1; A-E3;route=none";"no survey; no privacy; no smart meter";10.10.2026
+49;openalex:W7170234605;Data Protetction as Data Security : The Ecosystem of Digital Markets;exclude;"A-E1; A-E3;route=none";"no survey; no privacy; no smart meter";10.10.2026
+50;ieee:8893406;Regaining Insight and Control on SMGW-based Secure Communication in Smart Grids;exclude;"A-E1; A-E2;route=none";"no survey; no privacy;";10.10.2026
+51;openalex:W7118271705;Synergizing blockchain and AI to fortify IoT security: a comprehensive review;maybe;?A-I3;"privacy preservation; privacy is handled partially; no smart meter data, blockchain";10.10.2026
+52;ieee:10542132;Advancing Power System Services With Privacy-Preserving Federated Learning Techniques: A Review;maybe;?A-I3;"federated learning; privacy preservation; recoded include->maybe 2026-10-10 (user)";10.10.2026
+53;ieee:11232365;Designing a Sustainable Power Distribution System for Industrial Growth: A Case Study of Grand Batang City;exclude;"A-E1; A-E3;route=none";"no survey; no privacy; no smart meter";10.10.2026
+54;openalex:W2948816168;NILM Techniques for Intelligent Home Energy Management and Ambient Assisted Living: A Review;exclude;"A-E2;A-E3";"no smart meter data; only nilm, no privacy";10.10.2026
+55;ieee:10964702;Security and Privacy of Internet of Things: A Review of Challenges and Solutions;exclude;"A-E2;A-E3";"no smart meter data; only IoT, no privacy";10.10.2026
+56;openalex:W4389489802;Smart meter data analytics applications for secure, reliable and robust grid system: Survey and future directions;include;"A-I1;A-I2;A-I3;A-I4;A-I5";"privacy is stated aim; data driven; privacy section; privacy comparison dimension";10.10.2026
+57;ieee:6687999;Reconciling security protection and monitoring requirements in Advanced Metering Infrastructures;exclude;"A-E1; A-E3;route=none";"no survey; no privacy";10.10.2026
+58;ieee:9256294;A Survey of Security Challenges, Attacks Taxonomy and Advanced Countermeasures in the Internet of Things;maybe;?A-I3;"privacy is stated aim; privacy section; privacy comparison dimension; recoded include->maybe 2026-10-10 (user)";10.10.2026
+59;ieee:9354860;Reviewing IoT Security via Logic Bugs in IoT Platforms and Systems;exclude;"A-E1; A-E2; A-E3;route=none";"no survey; no smart meter data; no privacy";10.10.2026
+60;openalex:W4389510154;A survey on safeguarding critical infrastructures: Attacks, AI security, and future directions;exclude;"A-E2; A-E3";"no smart meter data; no privacy";10.10.2026
