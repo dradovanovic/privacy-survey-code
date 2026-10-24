@@ -10,7 +10,9 @@ Read each record and enter your decision in `stream-a-v1.h1.csv` (same number `n
 
 **Keywords:** Status quo; Sustainable energy; Business; Energy (signal processing); Environmental economics; Sustainable development; Natural resource economics; Industrial organization; Engineering; Economics; Political science; Renewable energy; Market economy; Electrical engineering; Mathematics; Statistics; Law
 
-_(no abstract)_
+Abstract The energy industry is at a crossroads. Digital technological developments have the potential to change our energy supply, trade, and consumption dramatically. The new digitalization model is powered by the artificial intelligence (AI) technology. The integration of energy supply, demand, and renewable sources into the power grid will be controlled autonomously by smart software that optimizes decision-making and operations. AI will play an integral role in achieving this goal. This study focuses on the use of AI techniques in the energy sector. This study aims to present a realistic baseline that allows researchers and readers to compare their AI efforts, ambitions, new state-of-the-art applications, challenges, and global roles in policymaking. We covered three major aspects, including: i) the use of AI in solar and hydrogen power generation; (ii) the use of AI in supply and demand management control; and (iii) recent advances in AI technology. This study explored how AI techniques outperform traditional models in controllability, big data handling, cyberattack prevention, smart grid, IoT, robotics, energy efficiency optimization, predictive maintenance control, and computational efficiency. Big data, the development of a machine learning model, and AI will play an important role in the future energy market. Our study’s findings show that AI is becoming a key enabler of a complex, new and data-related energy industry, providing a key magic tool to increase operational performance and efficiency in an increasingly cut-throat environment. As a result, the energy industry, utilities, power system operators, and independent power producers may need to focus more on AI technologies if they want meaningful results to remain competitive. New competitors, new business strategies, and a more active approach to customers would require informed and flexible regulatory engagement with the associated complexities of customer safety, privacy, and information security. Given the pace of development in information technology, AI and data analysis, regulatory approvals for new services and products in the new Era of digital energy markets can be enforced as quickly and efficiently as possible.
+
+_(abstract added after the pilot; source: semantic_scholar)_
 
 ---
 
@@ -70,7 +72,9 @@ As climate change becomes an increasingly urgent global concern, the use of carb
 
 **Keywords:** Smart grid; Cloud computing; Computer science; Grid; Renewable energy; Computer security; Distributed computing; Engineering; Telecommunications; Electrical engineering; Geography; Operating system; Geodesy
 
-_(no abstract)_
+The evolutionary transition to smart grids and smart buildings holds a great promise for a cleaner, more efficient power; healthier air; and lower greenhouse gas emissions. This chapter opens with an introduction that provides an overview of conventional power grid and its evolution to smart grid. In section “Smart Grid Technologies,” the smart grid technologies are presented. Section “Renewable Energy Resources in the Grid: Challenges and Opportunities” discusses a number of potential challenges and opportunities in integrating renewable energy (RE) with the existing grid. The next section presents the demand response (DR) concept, which is a way to decrease the electrical load. In section “Geographical Information System (GIS) and Smart Grid,” the importance of geographical information system (GIS) to provide a virtual representation of the smart grid is highlighted. In section “Smart Grid Networking and Communication Technologies,” the role of communication networks in smart grid operation is described. Section “Security and Privacy” presents a discussion of network security and privacy concerns. Section “Cloud Computing for the Smart Grid” explores the use of cloud computing to facilitate the operation of smart grid. Section “Advances and Challenges in the Development of Smart Grids” deals with the advances and challenges in the development of smart grid. The economics of smart grid are discussed in section “Smart Grid Economics.” In section “Road Map to ‘Mature’ Smart Grids,” a model is discussed that can provide guidance and a road map to establish a fully functioning “mature” smart grid. Section “Smart Buildings” introduces smart buildings, their integration within the smart grid infrastructure, the energy management approaches between building clusters and the microgrid environment, and finally provides real case studies of smart buildings.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -80,7 +84,9 @@ _(no abstract)_
 
 **Keywords:** Software deployment; Smart grid; Anomaly detection; Popularity; Reliability (semiconductor); Vulnerability (computing); Key (lock); Intrusion detection system; Computer security; Computer science; Risk analysis (engineering); Data science; Electricity; Big data; Mains electricity; Data collection; Deep learning; Smart contract; Information privacy; Credit card fraud; Electric power industry; Electric power system; Engineering; Government (linguistics); Grid
 
-_(no abstract)_
+Electricity theft presents a significant challenge for power utilities globally, leading to billions of dollars in annual financial losses and threatening the reliability of power systems. The growing popularity of smart grids increases the necessity for effective fraud detection mechanisms. This article provides a comprehensive analysis of several types of fraud impacting smart grids, including physical diversion, data manipulation, and cyber-attacks targeting Advanced Metering Infrastructure (AMI). The research investigates sophisticated approaches for fraud detection, including machine learning methods, hybrid CNN-LSTM architectures, and real-time anomaly detection systems incorporated into smart meters. The role of deep learning models, namely Convolutional Neural Networks (CNN) combined with Long Short-Term Memory (LSTM) networks, is highlighted in their efficacy in detecting fraudulent activities and managing data imbalance. Current implementation case studies are presented, highlighting actual deployment challenges, such as data privacy concerns and vulnerability to advanced attacks. This study summarizes significant findings, recommends improvements for augmenting fraud detection capabilities, and identifies prospective research domains, emphasizing the imperative of collaboration among stakeholders to develop secure and efficient smart grid systems.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -100,7 +106,9 @@ To address the inefficiencies of traditional centralized energy grids, blockchai
 
 **Keywords:** Demand response; Smart grid; Computer science; Energy management; Energy (signal processing); Engineering; Electrical engineering; Mathematics; Electricity; Statistics
 
-_(no abstract)_
+Price-driven energy management (EM) systems and demand response (DR) programs are reviewed in this paper, considering different types of electricity prices, such as real-time prices, day-ahead prices, and time-of-use tariffs. This paper clarifies objectives, constraints and optimization techniques of price-driven EM systems and DR programs, while showing their relevant qualitative and quantitative modeling approaches. Price-driven EM systems and DR programs have capability to improve technical and financial aspects of distribution networks, when more renewable energy sources are integrated into smart grids. Environmental constraints, financial benefits, and global policies represent main incentives of price-driven EM systems and DR programs, whereas their barriers include social concerns (i.e., end-user privacy), technical complications (e.g., requirements of information and communication technologies), and revenue uncertainties. Moreover, this paper assesses strengths, weaknesses, opportunities and threats (SWOT) of implementing such energy management strategies in smart grids.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -150,7 +158,9 @@ With the integration of Wireless Sensor Networks and the Internet of Things, the
 
 **Keywords:** Smart grid; Computer science; Blockchain; Computer security; Cyber-physical system; Distributed computing; Embedded system; Engineering; Electrical engineering; Operating system
 
-_(no abstract)_
+Artificial Intelligence (AI) integrated with Blockchain distributed ledger technology (BDLT) has become the most attractive research area in the domain of renewable energy and related power automations. However, the increased use of renewable energy-enabled devices raised various challenging problems, such as smart grid-based control management, power distribution, and automations. In this manner, the collaborative approach of blockchain, AI, and wireless sensor networks (WSN) provides a secure platform for control centers to estimate state, which helps to detect and analysis of bad data movement. There are various emerging issues in the field of Blockchain-AI in a renewable environment that poses a serious impact on the technological evaluation, for example, monitoring of contingency, optimal power flow, network reconfiguration, and the commitment of security-constrained units, and control auto-generation. So, in this paper, we perform a systematic review of the state-of-the-art integrated artificial intelligence and blockchain-enabled scheduling, management, optimization, privacy, and security of the smart grid and power distribution automation. One of the focusing aspects of this research is the real-time analysis of the physical layer of the smart grid. However, in this paper, we design a framework of a unified and abstracted state-space, in which the system analysis involves malicious attacks and maintain an effective generalized defense hierarchy in real-time. The current mechanism of analysis of smart grid-enabled physical layer-based malicious attacks is categorized into their associative and targeted components. Thus, we present three different pseudo-smart contracts and digital signatures with consensus policies; that provide an understanding of the new registry of renewable smart grids details, participating stakeholders and their roles, and an updated power distribution automation ledger. We then highlighted the list of emerging power distribution automation-related limitations along with the informational management approaches that present the existing state-of-the-art in this domain, including data-driven, target defense, computation, preservation, etc. Finally, we discuss open research issues and future directions of the smart grid and automation of power distribution security and privacy.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -160,7 +170,9 @@ _(no abstract)_
 
 **Keywords:** Metering mode; Smart grid; Computer security; Computer science; Standardization; Key (lock); Authentication (law); Grid; Confidentiality; Transmission (telecommunications); Engineering; Telecommunications; Electrical engineering; Operating system; Geometry; Mechanical engineering; Mathematics
 
-_(no abstract)_
+The modern energy distribution grid is increasingly responsible for extensive self-monitoring and load balancing, together with prompt failure response and small energy producer integration. In this scenario, where the grid doubles as a data transmission grid, commonly named smart grid, new information security challenges arise. In particular, providing confidential data transmission, privacy preserving metering and authentication for the metering software, emerge as key issues. In this chapter we will provide an overview of the security challenges of the smart metering scenario, highlighting both the security services to be guaranteed and their actors, and the ongoing standardization activities.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -200,7 +212,9 @@ During the last decade, the smart grid (SG) concept has started to become a real
 
 **Keywords:** Computer science; Computer security; Blockchain; Authentication (law); Correctness; Programming language
 
-_(no abstract)_
+Internet of things (IoT) is seen as combinations of various communication technologies and embedded equipment such as sensors, micro-controllers, radio-frequency identification, wireless devices, etc., which work as a single unit to achieve a specific task in a smart way, i.e., with less human intervention, and decisions are made automatically. IoT is used in many sectors such as smart home automation, smart grids, smart cities, vehicular networks, etc. Due to easy accessibility and reachability to such devices or networks, there are severe security and privacy issues in IoT. User authentication, access control mechanism, confidentiality and data correctness are a few of the major concerns among them. Though it looks like conventional security concerns, but due to (i) the dynamic nature of IoT, (ii) the resource-scarce nature of the devices and (iii) different standards and communication stacks involved, traditional network security countermeasures may not be applied directly to IoT. In recent years, usage of blockchain technology to address various security issues, specifically data correctness, has opened up a facet for IoT to explore the option of using blockchain in IoT. Researchers have started investigating the same. Primitively, blockchain is a non-editable, decentralized and cryptographically secured ledger that is tolerant against byzantine failure. This nature of blockchain makes it an attractive alternative to address security issues such as data integrity, entity authentication, etc. Also, in an IoT environment, where devices are spread across a vast geographical area, it requires a decentralized validation mechanism that a blockchain provides. In this paper, we intend to make an exhaustive survey of various researches being carried out to secure IoT networks using blockchain technology. We also aim to provide a summarized view for various prospective research directions in IoT which can be addressed by blockchain technology.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -230,7 +244,9 @@ The Internet of Things (IoT) has transformed multiple industries, providing sign
 
 **Keywords:** Sustainability; Transformative learning; Sustainable development; Environmental degradation; Software deployment; Resilience (materials science); Psychological resilience; Energy security; Business; Political science; Environmental economics; Efficient energy use; Kuznets curve; Environmental resource management; Social sustainability; Energy consumption; Environmental planning; Urban resilience; Climate change; Economic growth; Pandemic; Sustainability science; Energy (signal processing); Environmental security; Big data; Computer science
 
-_(no abstract)_
+This study addresses the urgent challenge of leveraging artificial intelligence (AI) to advance sustainable development during global crises, such as the COVID-19 pandemic, which amplified environmental, social, and economic challenges. The research problem focuses on understanding how AI can support the Sustainable Development Goals (SDGs), a set of essential global objectives established by the United Nations in 2015 to promote prosperity, social equity, and environmental protection by 2030. It also explores the applicability of the Environmental Kuznets Curve (EKC), a hypothesis suggesting that environmental degradation increases with early economic growth but declines after a certain income threshold, to AI-driven sustainability initiatives. Using a mixed-methods approach, including literature reviews, case studies, and quantitative analysis, the study investigates AI applications in health care, energy efficiency, Internet of Things (IoT)-enabled smart cities, industrial innovation, urban planning, and education. Key findings reveal that AI enhances energy optimization (e.g., 20% reduction in smart grid energy use) and urban resilience (e.g., 15% emission reduction via IoT traffic management) but faces barriers in equitable access, ethical implementation, and data privacy. The study underscores AI’s transformative potential to accelerate SDG progress while advocating for inclusive, ethical deployment to maximize sustainability benefits.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -350,7 +366,9 @@ The fast development of Internet of Things (IoT) and cyber-physical systems (CPS
 
 **Keywords:** Computer science; Computer security; Internet of Things; Variety (cybernetics); Information privacy; Field (mathematics); Personally identifiable information; Order (exchange); Internet privacy; Privacy software; Privacy by Design; Data science; Artificial intelligence; Finance; Mathematics; Economics; Pure mathematics
 
-_(no abstract)_
+The Internet of Things (IoT) emerged as a paradigm in which smart things collaborate among them and with other physical and virtual objects using the Internet in order to perform high level tasks. These things appear in a variety of application domains, including smart grid, health care and smart spaces where several parties share data in order to tackle specific tasks. Data in such domains are rich in sensitive data and data owner-specific habits. Thus, IoT raises concerns about privacy and data protection. This paper reports on a systematic literature review of privacy preserving solutions used in Cooperative Information Systems (CIS) in the IoT field. To do so, and after retrieving scientific productions on the subject, we classify the results according to several facets. In this paper, we consider a subset of them: (i) data life cycle, (ii) privacy preserving techniques and (iii) ISO privacy principles. We combine the facets then express and analyze the results as bubble charts. We analyze the proposed solutions in terms of the techniques they deployed and the privacy principles they covered according to the ISO standard and the data privacy laws and regulations of the European Commission on the Protection of Personal Data. Finally, we identifies recommendations to involve privacy principle coverage and security requirement fulfillment in the IoT applications.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -400,7 +418,9 @@ In a smart city environment, various intelligent devices, applications, and digi
 
 **Keywords:** Smart grid; Computer science; Wireless network; Computer network; Wireless; Wireless sensor network; Key distribution in wireless sensor networks; Wireless WAN; Computer security; Telecommunications; Engineering; Electrical engineering
 
-_(no abstract)_
+With advanced ubiquitous connectivity provided by wireless computing and mobile networks, the wireless smart grid can revolutionize the current electric power system. However, the use of wireless channels and ubiquitous technology introduce vulnerabilities that can be exploited to provide unauthorized access to the smart grid and impede operation. The harsh and complex electric-power-system environments also pose great challenges in security, privacy and reliability issues of wireless smart grid applications. The emerging wireless security threats are not covered by current smart grid security guidance, and thus regulations remain to be addressed. This paper presents a comprehensive survey of security for wireless smart grid with applications such as mobile ad hoc network, wireless sensor network (WSN), wireless mesh network and WiMAX. Also discussed are challenges in operating, controlling and maintaining secure communications within these networks.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -410,7 +430,9 @@ _(no abstract)_
 
 **Keywords:** Blockchain; The Internet; Cryptography; Quantum cryptography; Resilience (materials science); Quantum computer; Vulnerability (computing); Energy (signal processing); Computer science; Computer security; Focus (optics); Quantum; Internet of Things; Open research; Data sharing; Data security; Network security; Efficient energy use; Quantum technology; Cloud computing security
 
-_(no abstract)_
+With the growing integration of the Internet of Things (IoT) into power systems, the concept of the Energy Internet (EI) has emerged, realizing the vision of sharing energy like data. This paradigm enables efficient monitoring and seamless interconnection between traditional smart grids and renewable energy resources, but it also introduces critical security challenges, particularly with the advent of quantum computing. To address these challenges, researchers have proposed a range of security solutions. In this context, this study presents the first systematic survey of EI security approaches, covering works published between 2017 and 2025. The reviewed works were analyzed and classified into four categories: traditional cryptography, post-quantum and quantum cryptography, blockchain, and hybrid solutions. The findings reveal that blockchain (29.41%), hybrid (29.41%), and traditional cryptography (23.52%) dominate the literature, while post-quantum and quantum cryptography (17.64%) remain underexplored despite their long-term importance. Furthermore, most existing works focus on authentication, confidentiality, privacy, and integrity, while issues such as transparency, authorization, and quantum resilience are largely neglected. Finally, the paper discusses open challenges and future directions, emphasizing the need for scalable, energy-efficient, and quantum-resistant security frameworks for the EI.
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -420,7 +442,7 @@ _(no abstract)_
 
 **Keywords:** Work (physics); Computer science; World Wide Web; Engineering; Mechanical engineering
 
-_(no abstract)_
+_(no abstract → A-E7)_
 
 ---
 
@@ -430,7 +452,9 @@ _(no abstract)_
 
 **Keywords:** Smart grid; Computer science; Plan (archaeology); Grid; Resource (disambiguation); Power grid; Work (physics); Power (physics); Computer security; Computer network; Electrical engineering; Mathematics; Physics; Geometry; History; Mechanical engineering; Archaeology; Engineering; Quantum mechanics
 
-_(no abstract)_
+As the next generation of power system, smart grid provides people with great convenience in efficiency and quality. It supports two-way communication and extremely improves the efficiency of utilization of energy resource. In order to dispatch accurately and support the dynamic price, a lot of smart meters are installed at users’ house to collect the real-time data or power plan. Besides, many entities in smart grid need to share some necessary data. However, all these collected data are related to user privacy. In this paper, we make a comprehensive survey of privacy-preserving in smart grid, analyze the current privacy problems and list the corresponding solutions from a holistic angle. At last, we discuss the future work and make the conclusion
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -560,7 +584,9 @@ The Internet of Things (IoT) is a global and comprehensive network that monitors
 
 **Keywords:** Smart grid; Smart meter; Computer science; Grid; Demand response; Big data; Electricity; Computer security; Data aggregator; Analytics; Risk analysis (engineering); Data science; Engineering; Wireless sensor network; Business; Data mining; Mathematics; Computer network; Geometry; Electrical engineering
 
-_(no abstract)_
+The new power sector scenario has focused on integrating renewable energy sources into the grid and achieving trustworthy consumer-utility-stakeholder relationships using smart meters. Granular consumption data obtained from the data management systems of Advanced Metering Infrastructure helps power utilities build an individual consumer's electricity consumption profile that facilitates better load forecasting, efficient management of demand and supply, and more reliable service. However, different challenges concerned with accessibility of data through different communication layers, such as breaches of privacy of consumer data and security of grid have emerged. Due to this, many customers lose faith in the smart grid. To utilize the full potential of the smart grid system these issues need to be addressed to attain a secure, stable, and reliable grid that brings profit to the utility. This paper provides a comprehensive literature survey to achieve the above-mentioned purposes using data analytics. It also addresses different challenges of using data analytics methods and machine learning applications in mitigating these issues. This study would enable the electric utilities to structure a reliable grid to prevent revenue loss and aid the researchers to recognize the potential and challenges of machine learning techniques in the field of the power sector
+
+_(abstract added after the pilot; source: manual_publisher)_
 
 ---
 
@@ -600,5 +626,7 @@ In recent years, Internet-of-Things (IoT) platforms and systems have been rapidl
 
 **Keywords:** Computer security; Computer science; Critical infrastructure; Anomaly detection; Smart grid; Safeguarding; Data science; Artificial intelligence; Engineering; Nursing; Medicine; Electrical engineering
 
-_(no abstract)_
+Technologies such as artificial intelligence (AI), blockchain, and the Internet of Things (IoT) have converged in driving the next wave of digital revolution. Amalgamating the aforementioned advancements with critical infrastructure (CI) can significantly help society by offering a quality of life and boosting the nation’s economy and productivity. However, the lack of cybersecurity in CI gave rise to advanced threats and vulnerabilities that hindered the aforementioned societal benefits. In this vein, the paper provides an in-depth analysis of cyber threats and risks associated with different critical infrastructures, such as the financial, agriculture, energy, and healthcare sectors. Further, we thoroughly investigate the staggering benefits of AI and, based on it, present an exhaustive solution taxonomy to showcase the competency of AI mechanisms in confronting cyberattacks on CI. The taxonomy specifically addresses issues like data privacy, algorithmic bias, and human-AI collaboration for CI. Further, we proposed an AI-based secure data exchange framework for smart grid CI, where we attempt to secure the sensor’s data (i.e., power consumption, energy readings, and network data) from malicious adversaries. The proposed framework is evaluated using statistical measures, such as accuracy, training time, and receiver operating characteristic (ROC) curve, and anomaly detection. Further, the paper examines the research challenges that still adhere to the critical systems and require stringent AI-based mechanisms to tackle them.
+
+_(abstract added after the pilot; source: manual_publisher)_
 

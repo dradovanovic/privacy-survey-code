@@ -48,3 +48,20 @@ If these papers are valuable, they are `exclude` + `background`, not corpus pape
 2. **H1 screens from the title/abstract view only** (like `stream-a-v1.pilot.md`), without opening the full text.
 3. **Freeze screen-A-v1 unchanged.** No prompt edit is needed from this pilot.
 4. **Reconcile the 16 pilot disagreements** in `stream-a-v1.pilot.compare.csv` (§5.3), as practice for the main workflow. Blind decisions stay as they are.
+
+## Notes added 2026-10-13
+
+- H1 confirmed that the pilot decisions also used the papers' sections, not only title and abstract. The pilot H1 decisions are kept as recorded and are partly full-text informed; this explains causes 1 and 2 above.
+- Row 1: the reading view `stream-a-v1.pilot.md` showed "(no abstract)", but the sheet has a 327-word abstract (Semantic Scholar), which the LLM received. Both decided exclude A-E3, so the outcome is unaffected. From batch 1 on, the reading view and the LLM read the same file.
+- Outcome: screen-A-v1 frozen unchanged (`code/prompts/CHANGELOG.md`).
+
+## Reconciliation (2026-10-22 to 2026-10-24)
+
+H1 decided all 16 disagreements; `ta_final` is set for all 60 rows. Final: **12 retain, 48 exclude**. The pilot stays out of all figures (§7); its retained records go to full-text screening with the main run's.
+
+- **Agreements (44):** pre-filled from the shared vote (9 retain, 35 exclude).
+- **Abstracts:** 14 records had no abstract during the pilot and got a publisher or database abstract afterwards. `stream-a-v1.pilot.md` now shows them, marked "abstract added after the pilot" (backup `_archive/stream-a-v1.pilot.before-abstracts.md`). H1 decided 7, 8, 16, 35, 40, 41 and 60 on those abstracts. Only 42 still has none and is A-E7 (D19).
+- **Retained (3):** 3 (`?A-I3`), 57 (`?A-I1`) and 60 (`?A-I1`, `?A-I2`), each with the open point named in `ta_final_reason`.
+- **Excluded (13):** A-E6 for 7, 8, 10, 16, 40, 41; A-E3 for 11, 21, 35, 37 (nilm_only), 52, 58; A-E7 for 42. 8 carries a note as a source for Stream B snowballing (it is a review, so it is not routed).
+- **Consistency:** 11 and 35 (IoT privacy reviews with the smart grid as one domain) were first retained, then excluded as A-E3 to match the 20 agreed exclusions of this pattern in batches 1–16.
+- Tidy: reasons were reworded to name the code and the open point; "no abstract" reasons on records that now have one were replaced by H1's content decisions. Backups: `_archive/stream-a-v1.pilot.compare.before-prefill.csv`, `…before-tidy.csv`, `…before-tidy2.csv`, `…before-final-tidy.csv`. The blind H1 and LLM columns are unchanged.
