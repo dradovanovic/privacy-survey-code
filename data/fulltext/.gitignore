@@ -1,0 +1,3 @@
+# Full-text PDFs are copyrighted: never commit them.
+*
+!.gitignore
