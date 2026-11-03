@@ -29,3 +29,12 @@
 ## Order and blinding
 
 H1 decides each paper before any LLM full-text output for it exists or is opened. The LLM check (verbatim quote and page per criterion) uses a new frozen prompt, still to be written and piloted on a few papers.
+
+## Rules decided during full-text screening (H1)
+
+- 01.11.2026: chapters in edited books or handbooks → A-E4 (not definitely peer-reviewed); proceedings volumes (e.g. LNCS, AISC, CCIS) stay eligible. Non-English papers → A-E4.
+- 01.11.2026: the number of references or the size of the evidence base is not an eligibility criterion.
+- 01.11.2026: strict reading of privacy: access to or exposure of data is not inference (n 321).
+- 02.11.2026: A-I2 is met when smart-meter data structure the review (an own section, or the whole privacy part is about them), not when they are only recurring examples (batch 03).
+- 02.11.2026: A-I1 has no depth threshold. A thin, descriptive review whose main contribution is synthesis meets A-I1; its depth is scored in the quality appraisal. A-E1 is used only for primary studies (own attack, mechanism, framework or analysis as main contribution). Applied back to 516 (→ A-E6), 550 (→ A-E3), 703 (→ A-E3), 642 and 646 (→ include).
+- 02.11.2026: when only a preprint is accessible and the record has a DOI of a peer-reviewed venue, the content is screened on the preprint and A-I4/A-I5 come from the record (n 236, 721).

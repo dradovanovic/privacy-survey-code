@@ -5,6 +5,8 @@ One `pdftotext -enc UTF-8` call per page (no -layout). Each output file holds,
 for every page in order, a marker line `[[page N]]` (N = PDF page index from 1
 over the whole file) followed by that page's text with form feeds removed and
 trailing whitespace stripped from each line; the text is not otherwise changed.
+The manifest is written to `<out>/manifest.<input file stem>.csv` (for example
+`manifest.stream-a-v1.ft-batch01.input.csv`), so each batch keeps its own manifest.
 Standard library only; needs `pdftotext` on PATH.
 
 Example (from the project root):
@@ -98,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
             "sha256_txt": hashlib.sha256(data).hexdigest(),
         })
 
-    with (a.out / "manifest.csv").open("w", encoding="utf-8", newline="") as fh:
+    with (a.out / f"manifest.{a.input.stem}.csv").open("w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=MANIFEST_COLUMNS, lineterminator="\n")
         w.writeheader()
         w.writerows(manifest)

@@ -1,0 +1,21 @@
+n,record_id,title,year,pdf_file,pdf_pages
+32,ieee:6129371,Cyber Security and Privacy Issues in Smart Grids,2012,ieee_6129371.pdf,
+43,openalex:W2549551626,A Comprehensive Survey of Privacy-Preserving in Smart Grid,2016,openalex_W2549551626.pdf,229-239
+47,ieee:9594795,Differential Privacy for IoT-Enabled Critical Infrastructure: A Comprehensive Survey,2021,ieee_9594795.pdf,
+56,openalex:W4389489802,"Smart meter data analytics applications for secure, reliable and robust grid system: Survey and future directions",2023,openalex_W4389489802.pdf,
+57,ieee:6687999,Reconciling security protection and monitoring requirements in Advanced Metering Infrastructures,2013,ieee_6687999.pdf,
+60,openalex:W4389510154,"A survey on safeguarding critical infrastructures: Attacks, AI security, and future directions",2023,openalex_W4389510154.pdf,
+73,openalex:W2144321582,Wireless Sensor Network Applications in Smart Grid: Recent Trends and Challenges,2012,openalex_W2144321582.pdf,
+79,scopus:2-s2.0-105039582783,Digital Energy Systems and Data Privacy: A Review of Legal and Ethical Considerations in Building and Grid-Level Applications,2026,scopus_2-s2.0-105039582783.pdf,268-279
+85,openalex:W1528312262,A Holistic View of Security and Privacy Issues in Smart Grids,2013,openalex_W1528312262.pdf,65-78
+90,ieee:8418124,Privacy Risks in Resource Constrained Smart Micro-Grids,2018,ieee_8418124.pdf,
+128,scopus:2-s2.0-84877932292,Privacy-friendly tasking and trading of energy in smart grids,2013,scopus_2-s2.0-84877932292.pdf,
+149,ieee:10418207,"A Comprehensive Review on Cyber-Attacks in Power Systems: Impact Analysis, Detection, and Cyber Security",2024,ieee_10418207.pdf,
+159,openalex:W3155199389,Assessing Insider Attacks and Privacy Leakage in Managed IoT Systems for Residential Prosumers,2021,openalex_W3155199389.pdf,
+166,ieee:10408675,Digital Privacy and Cyberphysical Security Perspectives of Grid-Edge Power Systems and Markets,2023,ieee_10408675.pdf,
+184,openalex:W7214037147,Leveraging Federated Learning For Smart Grids: A Comprehensive Survey,2026,openalex_W7214037147.pdf,
+186,openalex:W2402165762,Smart Grid Technology in Power Systems,2015,openalex_W2402165762.pdf,
+198,ieee:9830295,A Review of IoT-Based Techniques for Smart Power Systems Architectures,2022,ieee_9830295.pdf,
+204,ieee:10869464,"An Extensive and Methodical Review of Smart Grids for Sustainable Energy Management- Addressing Challenges With AI, Renewable  Energy  Integration, and Leading-Edge Technologies",2026,ieee_10869464.pdf,
+209,ieee:8702957,Analysis of Cyber-Physical Security in Electric Smart Grid : Survey and challenges,2018,ieee_8702957.pdf,
+218,openalex:W4410317288,"Privacy-Preserving Machine Learning for IoT-Integrated Smart Grids: Recent Advances, Opportunities, and Challenges",2025,openalex_W4410317288.pdf,
