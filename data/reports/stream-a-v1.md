@@ -113,8 +113,8 @@ Screening sheet (unique records):
 
 ## Seed recall
 
-- overall: 13/13 seeds retrieved (recall = 1.00); 3 pending (source database not searched yet); 16 seeds; searched: acm, ieee, openalex, scopus
-- ieee: 9/9 seeds retrieved (recall = 1.00)
+- overall: 12/12 seeds retrieved (recall = 1.00); 3 pending (source database not searched yet); 15 seeds; searched: acm, ieee, openalex, scopus
+- ieee: 8/8 seeds retrieved (recall = 1.00)
 - scopus: 4/4 seeds retrieved (recall = 1.00)
 - snowballing: no seeds evaluated yet; 3 pending
 - pending:
@@ -124,10 +124,10 @@ Screening sheet (unique records):
 
 Seeds retrieved by each searched database on its own (before dedupe; all seeds):
 
-- acm: 0/16; not retrieved: Finster14a, Ashgar17a, Gross21a, Mirzaee22a, Mitra24a, Wang19a, Kumar19a, Bibi25a, Mohassel14a, Liu12a, Alahakoon16a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a, Erkin13a
-- ieee: 9/16; not retrieved: Mitra24a, Bibi25a, Mohassel14a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a
-- openalex: 12/16; not retrieved: Mohassel14a, Alahakoon16a, Eskandarnia22a, Komninos14a
-- scopus: 13/16; not retrieved: Mohassel14a, Eskandarnia22a, Komninos14a
+- acm: 0/15; not retrieved: Finster14a, Ashgar17a, Gross21a, Mirzaee22a, Mitra24a, Wang19a, Kumar19a, Bibi25a, Mohassel14a, Liu12a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a, Erkin13a
+- ieee: 8/15; not retrieved: Mitra24a, Bibi25a, Mohassel14a, Eskandarnia22a, Desai19a, Llaria21a, Komninos14a
+- openalex: 12/15; not retrieved: Mohassel14a, Eskandarnia22a, Komninos14a
+- scopus: 12/15; not retrieved: Mohassel14a, Eskandarnia22a, Komninos14a
 
 - seed notes:
     - Mohassel14a: metadata-unreachable: in Scopus, but no privacy term in title, abstract (OpenAlex) or keywords (diagnose-seeds --db scopus, 2026-10-09); expected via snowballing; A-I3 satisfied by section 3.1 'End users privacy' (checked by hand 2026-10-09)

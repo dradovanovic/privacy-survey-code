@@ -33,6 +33,7 @@ import requests
 from .ieee_client import RUN_LOG_HEADER
 
 BATCH_URL = "https://api.semanticscholar.org/graph/v1/paper/batch"
+GRAPH_URL = "https://api.semanticscholar.org/graph/v1"
 BATCH_MAX = 500     # ids per request (API maximum)
 FIELDS = "abstract,externalIds"
 
@@ -69,6 +70,7 @@ class SemanticScholarClient:
         self.max_retries = max_retries
         self.session = requests.Session()
         self._last = 0.0
+        self.n_retries = 0                  # 429 / 5xx responses that were retried (reported by snowball)
         self.run_log = self.data_dir / "runs.csv"
         self.data_dir.mkdir(parents=True, exist_ok=True)
         if not self.run_log.exists():
@@ -122,3 +124,53 @@ class SemanticScholarClient:
         if status != 200:
             raise RuntimeError(f"Semantic Scholar returned {status}: {body}")
         return body, ids, raw_path
+
+    # ------------------------------------------------------- snowballing (GET)
+    def _get(self, path: str, params: dict) -> tuple[dict, int]:
+        """GET graph/v1/<path> with the spacing and retry rules of _post."""
+        headers = {"x-api-key": self.api_key} if self.api_key else {}
+        delay = max(self.sleep, 1.0)
+        for attempt in range(1, self.max_retries + 1):
+            wait = self.sleep - (time.monotonic() - self._last)
+            if wait > 0:
+                time.sleep(wait)
+            resp = self.session.get(f"{GRAPH_URL}/{path}", params=params, headers=headers, timeout=self.timeout)
+            self._last = time.monotonic()
+            if resp.status_code == 200:
+                return resp.json(), 200
+            if resp.status_code in (429, 500, 502, 503, 504) and attempt < self.max_retries:
+                self.n_retries += 1
+                time.sleep(float(resp.headers.get("Retry-After") or delay))
+                delay *= 2
+                continue
+            try:
+                body = resp.json()
+            except ValueError:
+                body = {"error": resp.text[:500]}
+            return body, resp.status_code
+        raise RuntimeError("unreachable")
+
+    def paper_links(self, doi: str, kind: str, fields: str, raw_path: Path, run_id: str, query_id: str,
+                    content_type: str, offset: int = 0, limit: int = 500) -> tuple[dict, int]:
+        """
+        One logged request for paper/DOI:<doi>/<kind> (kind = references |
+        citations), one page of `limit` links from `offset`. The raw response
+        (also an error body, e.g. 404 for an unknown DOI) is written to
+        raw_path before it is parsed. Returns (body, status); never raises on
+        an API error, so the caller can log the failure and continue.
+        """
+        if kind not in ("references", "citations"):
+            raise ValueError("kind must be references or citations")
+        body, status = self._get(f"paper/DOI:{doi}/{kind}", {"fields": fields, "offset": offset, "limit": limit})
+        raw_path.parent.mkdir(parents=True, exist_ok=True)
+        raw_path.write_text(json.dumps(body), encoding="utf-8")
+        data = (body.get("data") or []) if status == 200 and isinstance(body, dict) else []
+        with open(self.run_log, "a", newline="", encoding="utf-8") as fh:
+            csv.DictWriter(fh, fieldnames=RUN_LOG_HEADER).writerow({
+                "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "run_id": run_id, "db": "semanticscholar", "query_id": query_id,
+                "content_type": content_type, "start_record": offset, "max_records": limit,
+                "returned": len(data), "total_records": "", "status": status,
+                "querytext": f"paper/DOI:{doi}/{kind} fields={fields}",
+            })
+        return body, status

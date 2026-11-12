@@ -71,6 +71,7 @@ class OpenAlexClient:
         self.timeout = timeout
         self.max_retries = max_retries
         self.session = requests.Session()
+        self.n_retries = 0                  # 429 / 5xx responses that were retried (reported by snowball)
         self.run_log = self.data_dir / "runs.csv"
         self.data_dir.mkdir(parents=True, exist_ok=True)
         if not self.run_log.exists():
@@ -86,6 +87,7 @@ class OpenAlexClient:
             if resp.status_code == 200:
                 return resp.json(), 200
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < self.max_retries:
+                self.n_retries += 1
                 time.sleep(delay)
                 delay *= 2
                 continue
@@ -100,6 +102,30 @@ class OpenAlexClient:
     def _log(self, row: dict) -> None:
         with open(self.run_log, "a", newline="", encoding="utf-8") as fh:
             csv.DictWriter(fh, fieldnames=RUN_LOG_HEADER).writerow(row)
+
+    # ------------------------------------------------------- generic request
+    def logged_get(self, params: dict, raw_path: Path, run_id: str, query_id: str, content_type: str,
+                   start: int = 0, querytext: str | None = None) -> tuple[dict, int]:
+        """
+        One logged request with arbitrary works parameters (snowballing: cites:
+        and openalex: filters with select=). The raw response is written to
+        raw_path (compact JSON) before it is parsed, and the request is appended
+        to runs.csv. Returns (body, status) and never raises on an API error, so
+        the caller can log the failure and continue.
+        """
+        body, status = self._get(params)
+        raw_path.parent.mkdir(parents=True, exist_ok=True)
+        raw_path.write_text(json.dumps(body), encoding="utf-8")
+        self._log({
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "run_id": run_id, "db": "openalex", "query_id": query_id,
+            "content_type": content_type, "start_record": start,
+            "max_records": params.get("per-page", ""),
+            "returned": len(page_items(body)) if status == 200 else 0,
+            "total_records": page_total(body) if status == 200 else "",
+            "status": status, "querytext": querytext or params.get("filter", ""),
+        })
+        return body, status
 
     # ------------------------------------------------------------ DOI batch
     def works_by_doi(self, dois: list[str], query_id: str, run_id: str,

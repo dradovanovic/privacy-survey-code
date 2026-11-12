@@ -14,6 +14,7 @@ survey_pipeline command line.
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json   # one IEEE request per missed seed
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json --db scopus   # Scopus + OpenAlex DOI lookups
     python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
+    python -m survey_pipeline.cli snowball  queries/stream_a_v1.json [--dry-run] [--limit N] [--from-run 2026...Z]
 
 All output lives under data/ (override with --data-dir):
     data/compiled/<query_id>.md            compiled strings for every database (supplement material)
@@ -23,6 +24,10 @@ All output lives under data/ (override with --data-dir):
     data/raw/crossref/backfill/<run_id>/   raw Crossref works/{doi} responses (abstract backfill)
     data/raw/semanticscholar/backfill/<run_id>/  raw Semantic Scholar paper/batch responses + request ids
     data/raw/ieee/lookup/                  raw DOI / title lookup responses
+    data/raw/<openalex|semanticscholar>/snowball/<run_id>/  raw snowballing responses (references, citing works)
+    data/normalized/<query_id>.snowball.edges.csv    corpus paper -> found work, per direction and source
+    data/normalized/<query_id>.snowball.records.csv  unique found works (not screened, not filtered)
+    data/reports/<query_id>.snowball.md    snowballing counts (per source, nested filters, seeds, overlap)
     data/normalized/<query_id>.<db>.jsonl  unified records
     data/reports/<query_id>.md             counts, variants, seed recall
     data/reports/<query_id>.seeds.scopus.md  diagnosis of missed seeds expected from Scopus
@@ -922,6 +927,28 @@ def cmd_lookup(args) -> int:
 
 
 # ----------------------------------------------------------------------------
+# snowball
+# ----------------------------------------------------------------------------
+
+def cmd_snowball(args) -> int:
+    """
+    Backward and forward snowballing of the corpus (default
+    data/screening/<query_id>.corpus-initial.csv) through OpenAlex and
+    Semantic Scholar; see survey_pipeline/snowball.py. Collects and counts
+    only: no screening sheet, no eligibility decision.
+    """
+    from . import snowball
+    sources = tuple(s.strip() for s in args.sources.split(",") if s.strip())
+    bad = [s for s in sources if s not in snowball.SOURCES]
+    if bad or not sources:
+        print(f"--sources must be a comma list of {', '.join(snowball.SOURCES)}; got {args.sources}", file=sys.stderr)
+        return 2
+    return snowball.run(args.query, args.data_dir, corpus_file=args.corpus, limit=args.limit,
+                        dry_run=args.dry_run, from_run=args.from_run, sources=sources, bib=args.bib,
+                        retry_failed=args.retry_failed)
+
+
+# ----------------------------------------------------------------------------
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="survey_pipeline")
@@ -970,6 +997,20 @@ def main(argv=None) -> int:
     g.add_argument("--doi"); g.add_argument("--title")
     s.add_argument("--query-id", default="manual-lookup", help="query_id recorded in runs.csv")
     s.set_defaults(fn=cmd_lookup)
+    s = sub.add_parser("snowball", help="backward/forward snowballing of the corpus (OpenAlex, Semantic Scholar)")
+    s.add_argument("query")
+    s.add_argument("--corpus", default=None, help="corpus CSV with columns n, doi, title "
+                                                  "(default data/screening/<query_id>.corpus-initial.csv)")
+    s.add_argument("--limit", type=int, default=None, help="only the first N corpus papers")
+    s.add_argument("--dry-run", action="store_true",
+                   help="first --limit (default 3) corpus papers; prints counts, writes no output file")
+    s.add_argument("--from-run", default=None, help="rebuild the outputs from the saved raw files of this run_id")
+    s.add_argument("--retry-failed", action="store_true",
+                   help="with --from-run: first re-request the Semantic Scholar lists that ended in an error "
+                        "other than 404 (rate limit); new pages are saved next to the failed ones")
+    s.add_argument("--sources", default="openalex,semanticscholar")
+    s.add_argument("--bib", default=None, help="paper .bib for resolving key: seeds, as in summarize")
+    s.set_defaults(fn=cmd_snowball)
 
     args = p.parse_args(argv)
     return args.fn(args)

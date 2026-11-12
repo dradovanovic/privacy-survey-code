@@ -1,0 +1,138 @@
+﻿n;record_id;llm_run1;llm_run2;pile;qc_sample
+1689;openalex:W2116065935;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+1691;openalex:W2222845742;exclude A-E2;exclude A-E2;excluded_llm;0
+1703;openalex:W3209463749;exclude A-E3;exclude A-E3;excluded_llm;0
+1730;openalex:W4389191991;exclude A-E2;exclude A-E2;excluded_llm;0
+1731;openalex:W2627029408;exclude A-E2;maybe ?A-I3;h1_unclear;0
+1734;openalex:W2626507445;exclude A-E3;exclude A-E3;excluded_llm;0
+1738;openalex:W2147779517;exclude A-E2 ?A-I2;maybe ?A-I2 ?A-I3;h1_unclear;0
+1741;openalex:W4225287946;exclude A-E2;maybe ?A-I3;h1_unclear;0
+1742;openalex:W2618986947;maybe ?A-I3;maybe ?A-I2 ?A-I3;h1_unclear;0
+1752;openalex:W4415195162;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+1756;openalex:W4308246097;exclude A-E2 ?A-I2;exclude A-E2;excluded_llm;0
+1761;openalex:W4309771115;exclude A-E2 ?A-I2;exclude A-E3;excluded_llm;0
+1767;openalex:W2171208762;exclude A-E2;exclude A-E2;excluded_llm;0
+1770;openalex:W2282472744;exclude A-E3;exclude A-E3 ?A-I3;excluded_llm;0
+1771;openalex:W3133868045;exclude A-E3;exclude A-E3;excluded_llm;0
+1774;openalex:W69854901;exclude A-E3;exclude A-E2 ?A-I2;excluded_llm;0
+1776;openalex:W2553423789;exclude A-E2;exclude A-E2;excluded_llm;0
+1782;openalex:W2193319646;exclude A-E3;exclude A-E3 ?A-I3;excluded_llm;0
+1783;openalex:W1867593686;exclude A-E3;exclude A-E2 ?A-I2;excluded_llm;0
+1789;openalex:W3165811611;maybe ?A-I2 ?A-I3;maybe ?A-I2 ?A-I3;h1_unclear;0
+1798;openalex:W7164326121;exclude A-E3;exclude A-E3;excluded_llm;0
+1802;openalex:W2295959395;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+1803;openalex:W1975404935;exclude A-E2;exclude A-E2;excluded_llm;0
+1806;openalex:W2735003185;exclude A-E2;exclude A-E2;excluded_llm;0
+1819;openalex:W1856626031;exclude A-E2;exclude A-E2;excluded_llm;0
+1835;openalex:W4361988489;maybe ?A-I3 ?A-I4 [abstract_missing];maybe ?A-I3;h1_unclear;0
+1843;openalex:W2962804165;exclude A-E2;exclude A-E2;excluded_llm;0
+1848;openalex:W4394917339;exclude A-E3;exclude A-E3;excluded_llm;0
+1849;openalex:W7222312491;maybe ?A-I3;maybe ?A-I3;h1_unclear;0
+1865;openalex:W4224032255;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;1
+1883;openalex:W2751038533;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+1916;openalex:W2496223507;exclude A-E3;exclude A-E3;excluded_llm;0
+1919;openalex:W2512564382;exclude A-E3;exclude A-E3;excluded_llm;0
+1939;openalex:W4224316980;maybe ?A-I3;maybe ?A-I3;h1_unclear;0
+1944;openalex:W4200384090;exclude A-E3;exclude A-E3;excluded_llm;0
+1954;semanticscholar:79d4948c01310f5b5d17584fcd3152f19f8c402b;exclude A-E2 ?A-I2 ?A-I4;exclude A-E2 ?A-I2 ?A-I4;excluded_llm;0
+1963;openalex:W4412453539;exclude A-E2 ?A-I2;exclude A-E3;excluded_llm;0
+1966;openalex:W7160913285;exclude A-E3;exclude A-E3;excluded_llm;0
+1978;openalex:W1967449400;exclude A-E2;exclude A-E2 ?A-I4;excluded_llm;0
+1979;openalex:W4233104126;exclude A-E2;exclude A-E2;excluded_llm;0
+2005;openalex:W4210885148;exclude A-E3 ?A-I3;exclude A-E3;excluded_llm;0
+2006;openalex:W2752604770;exclude A-E3 ?A-I4;exclude A-E3;excluded_llm;0
+2019;openalex:W7167913022;exclude A-E3;exclude A-E2 ?A-I2;excluded_llm;0
+2020;openalex:W4399796111;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2028;openalex:W3193878513;exclude A-E3 [mechanism_only];exclude A-E3 ?A-I2 [mechanism_only];excluded_llm;0
+2030;openalex:W4392303499;maybe ?A-I2 ?A-I3;exclude A-E2;h1_unclear;0
+2054;openalex:W4378420439;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2057;openalex:W3216787390;maybe ?A-I2 ?A-I3;exclude A-E3 ?A-I4;h1_unclear;0
+2134;openalex:W3041235554;exclude A-E1 route=none [nilm_only];exclude A-E1 route=none;excluded_llm;1
+2145;openalex:W7128924986;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2149;openalex:W4285493969;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;1
+2153;openalex:W1971671830;exclude A-E3;exclude A-E3;excluded_llm;0
+2155;openalex:W4291250448;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2165;openalex:W7225269666;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2172;semanticscholar:354a6a0d3023ad4fa71c72ceba2ad610d151dc29;maybe ?A-I3 ?A-I4;maybe ?A-I2 ?A-I3 ?A-I4;h1_unclear;0
+2174;openalex:W7133293467;maybe ?A-I2 ?A-I3;maybe ?A-I2 ?A-I3;h1_unclear;0
+2181;openalex:W2023824649;exclude A-E2;exclude A-E2;excluded_llm;0
+2183;openalex:W2529556398;exclude A-E3;exclude A-E3;excluded_llm;0
+2190;semanticscholar:64c465883221e847075739e4160e5b08b5abd98a;exclude A-E3 ?A-I4;exclude A-E2 ?A-I2 ?A-I4;excluded_llm;0
+2202;openalex:W2094930328;exclude A-E2;maybe ?A-I3;h1_unclear;0
+2207;openalex:W3075581233;exclude A-E2;exclude A-E2;excluded_llm;1
+2212;openalex:W4391343803;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2215;semanticscholar:ae9316ef514ac940bd0fa31fbb4ad0241bb6c8b0;exclude A-E2 ?A-I4;exclude A-E2 ?A-I4;excluded_llm;0
+2218;openalex:W4389137511;exclude A-E2;exclude A-E2;excluded_llm;0
+2225;openalex:W4411554702;exclude A-E1 route=C;exclude A-E1 route=C;excluded_llm;0
+2231;openalex:W4281746927;exclude A-E3 [mechanism_only];exclude A-E3 [mechanism_only];excluded_llm;0
+2234;semanticscholar:f083b324328b3108941b41bad7491511cdc29f99;exclude A-E2 ?A-I2 ?A-I4;exclude A-E2 ?A-I2 ?A-I4;excluded_llm;0
+2235;openalex:W2003992171;exclude A-E3;exclude A-E3;excluded_llm;0
+2254;openalex:W2952651866;maybe ?A-I2 ?A-I3;maybe ?A-I2 ?A-I3;h1_unclear;0
+2264;openalex:W2208003270;exclude A-E3;exclude A-E3;excluded_llm;0
+2267;openalex:W2018633335;exclude A-E3;exclude A-E3;excluded_llm;0
+2276;openalex:W4285105045;exclude A-E3 [nilm_only];exclude A-E3 [nilm_only];excluded_llm;0
+2277;openalex:W4401053105;exclude A-E3 [mechanism_only];exclude A-E3;excluded_llm;0
+2306;openalex:W2964518165;exclude A-E1 route=B;exclude A-E1 route=B;excluded_llm;0
+2320;openalex:W3082296348;exclude A-E2 ?A-I1;exclude A-E2 ?A-I1;excluded_llm;1
+2327;openalex:W4319080092;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2332;openalex:W1990396709;exclude A-E2;exclude A-E2;excluded_llm;0
+2341;openalex:W3164241175;exclude A-E3;exclude A-E3;excluded_llm;0
+2369;openalex:W4396860005;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2394;openalex:W4311484939;exclude A-E2 ?A-I2;exclude A-E3;excluded_llm;0
+2395;openalex:W4385894008;exclude A-E3 ?A-I4;exclude A-E2 ?A-I2;excluded_llm;0
+2397;openalex:W4378966654;exclude A-E3 ?A-I3 [mechanism_only];exclude A-E3 ?A-I4 [mechanism_only];excluded_llm;0
+2410;openalex:W4224044389;exclude A-E2;exclude A-E2;excluded_llm;0
+2412;openalex:W7214066924;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2439;openalex:W2134484126;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2494;openalex:W7161172525;exclude A-E3;exclude A-E3;excluded_llm;0
+2527;openalex:W7162530467;exclude A-E1 route=C;exclude A-E1 route=C;excluded_llm;1
+2529;openalex:W257304527;exclude A-E2 ?A-I2;exclude A-E3;excluded_llm;0
+2533;openalex:W1990732781;exclude A-E3;exclude A-E3;excluded_llm;0
+2542;openalex:W2169671599;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2551;openalex:W3019354509;exclude A-E2;exclude A-E2;excluded_llm;0
+2560;semanticscholar:73dfb9041df6a5e21c955a3fe8d04c2dc4457c17;exclude A-E2 ?A-I4;exclude A-E2 ?A-I4 ?A-I2;excluded_llm;0
+2581;openalex:W2597612291;exclude A-E3 ?A-I1;exclude A-E3 ?A-I1;excluded_llm;0
+2590;openalex:W2274974792;exclude A-E3;exclude A-E3;excluded_llm;0
+2597;openalex:W2200377847;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2619;openalex:W7225312693;exclude A-E3 ?A-I4;exclude A-E3 ?A-I4;excluded_llm;0
+2649;openalex:W2808308552;exclude A-E3;exclude A-E2 ?A-I2;excluded_llm;1
+2651;openalex:W2153005076;exclude A-E2;exclude A-E2 ?A-I2;excluded_llm;0
+2653;openalex:W3191099761;exclude A-E3;exclude A-E3;excluded_llm;1
+2661;openalex:W2196845260;exclude A-E3;exclude A-E3;excluded_llm;0
+2668;semanticscholar:cbc0ef6cdab61a5c5721db5c5de3f9d06b141b49;exclude A-E2 ?A-I4;exclude A-E2 ?A-I4;excluded_llm;0
+2689;semanticscholar:0fa2037891afea68c1c3367641bab0fa26ec45d6;exclude A-E2 ?A-I4;exclude A-E2 ?A-I4;excluded_llm;0
+2690;openalex:W4396914561;exclude A-E3 ?A-I1;exclude A-E3 ?A-I1;excluded_llm;0
+2691;openalex:W2159514557;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2702;openalex:W4283747666;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2709;openalex:W3153001265;exclude A-E3;exclude A-E3;excluded_llm;1
+2712;openalex:W2335001507;exclude A-E3;exclude A-E3;excluded_llm;1
+2724;openalex:W4319066583;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;1
+2729;openalex:W2619907041;exclude A-E3 [nilm_only];exclude A-E3 [nilm_only];excluded_llm;0
+2743;openalex:W7164528094;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2753;semanticscholar:d81ec8338d51e845065f676b17a0f93a770445a6;maybe ?A-I2 ?A-I3 ?A-I4;maybe ?A-I2 ?A-I3 ?A-I4;h1_unclear;0
+2761;openalex:W4309485898;exclude A-E3;exclude A-E3;excluded_llm;0
+2771;openalex:W1972242969;exclude A-E3;exclude A-E3;excluded_llm;0
+2775;openalex:W2061561129;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2782;semanticscholar:5ecba7964aaa6ce4fdca26914b0ab0f027aee5bd;maybe ?A-I4;maybe ?A-I4;h1_unclear;0
+2788;openalex:W1985426183;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+2794;openalex:W1619743276;exclude A-E3;exclude A-E3;excluded_llm;0
+2809;openalex:W2547882662;exclude A-E3;exclude A-E3;excluded_llm;0
+2848;openalex:W2290359964;exclude A-E3;exclude A-E3;excluded_llm;0
+2851;openalex:W4311946101;exclude A-E2;exclude A-E2;excluded_llm;0
+2863;semanticscholar:1446a70b4f679ba2e6d3aa385395bcb49da49c81;exclude A-E2 ?A-I2 ?A-I4;maybe ?A-I2 ?A-I3 ?A-I4;h1_unclear;0
+2868;openalex:W2768554084;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2876;openalex:W7160158813;exclude A-E3;exclude A-E3;excluded_llm;0
+2879;openalex:W4360982192;exclude A-E3 [mechanism_only];exclude A-E3 [mechanism_only];excluded_llm;0
+2882;openalex:W3014107495;exclude A-E1 route=none ?A-I4;exclude A-E1 route=none;excluded_llm;1
+2893;openalex:W3107212100;exclude A-E2;exclude A-E2;excluded_llm;0
+2898;openalex:W4403448793;exclude A-E2 ?A-I2;exclude A-E2 ?A-I2;excluded_llm;0
+2903;openalex:W2497206660;maybe ?A-I2 ?A-I3;exclude A-E3;h1_unclear;0
+2928;openalex:W2175265826;maybe ?A-I3;maybe ?A-I3;h1_unclear;0
+2933;openalex:W2745847224;exclude A-E3;exclude A-E3;excluded_llm;0
+2959;openalex:W4367393918;exclude A-E2;exclude A-E2;excluded_llm;0
+2963;semanticscholar:15ddcae4e707812ca6ef64e0ae9265766a6a045b;maybe ?A-I2 ?A-I3 ?A-I4;maybe ?A-I2 ?A-I3 ?A-I4;h1_unclear;0
+3005;openalex:W2074895072;exclude A-E1 route=none;exclude A-E1 route=none;excluded_llm;0
+3012;openalex:W3181647770;exclude A-E3;exclude A-E3;excluded_llm;0
+3026;openalex:W2996611705;exclude A-E2;exclude A-E2;excluded_llm;0
+3034;openalex:W4391994152;exclude A-E2;maybe ?A-I3;h1_unclear;0
+3040;openalex:W3212463290;exclude A-E3;exclude A-E3;excluded_llm;0
