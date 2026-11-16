@@ -1,4 +1,4 @@
-# Stream A: PRISMA numbers, database search (initial corpus) and snowballing round 1
+# Stream A: PRISMA numbers, database search (initial corpus) and snowballing rounds 1 and 2
 
 Date: 10.11.2026. Sources: `../reports/stream-a-v1.md` (identification), `stream-a-v1.ta-figures.md` (title/abstract), `stream-a-v1.fulltext.csv` (full text, batches pilot and 01–09). Snowballing ("other methods" column) was added on 16.11.2026 in its own section below.
 
@@ -55,7 +55,31 @@ Full-text agreement of the frozen LLM prompt with H1's blind decisions is report
 - **93 studies** (83 database + 10 snowballing), in `stream-a-v1.corpus-after-snowball1.csv`. All with a DOI; no duplicate DOIs or titles.
 - Years 2012–2026 (2021 and 2026: 12 each; 2019, 2022 and 2025: 9 each).
 - `ft_streams` (H1): B;C 63, C 21, B 4, none 5.
-- Yield of the round: 10 new studies from 83 start papers (12 % growth). Whether a second round is run (from these 10) is not yet decided.
+- Yield of the round: 10 new studies from 83 start papers (12 % growth). A second round was run from these 10 (D23) and added nothing; see the next section.
+
+## Other methods: snowballing, round 2 (added 16.11.2026)
+
+Sources: DECISION.md D23 (run 20261116T110934Z, start set: the 10 studies added in round 1), `../reports/stream-a-v1.snowball-r2.md`, `stream-a-v1.snowball-r2.ta-final.csv`, `stream-a-v1.snowball-r2.fulltext.csv`, `stream-a-v1.sb2-ft-batch01.compare.md`.
+
+| Box | Count |
+|---|---|
+| Records identified by citation searching (backward and forward from the 10 studies; OpenAlex, Semantic Scholar) | **2,227** unique works |
+| Removed as already known | **726**: in the corpus 27, in the database screening sheet 60, found in round 1 639 |
+| New works | **1,501** |
+| Records removed before screening by pre-filter F3 (D21) | **1,386** |
+| Records screened (title/abstract) | **115** |
+| Records excluded | **105**: A-E3 46, A-E1 44, A-E2 9, A-E4 5, A-E7 1 (decided by: both LLM runs exclude, not re-read by H1, 73; H1 32 = check sample 9, recheck of A-E2 exclusions 19, unclear or no abstract 4) |
+| Reports sought for retrieval | **10** (all decided by H1: 5 unclear, 4 recheck, 1 check sample) |
+| Reports not retrieved | **0** |
+| Reports assessed for eligibility | **10** |
+| Reports excluded | **10**: A-E3 not in domain 3, A-E6 privacy not substantive 3, A-E1 primary study or mixed paper 2, A-E2 no privacy component 2 |
+| Studies included | **0** |
+
+Checks: 2,227 − 726 = 1,501; 1,501 − 1,386 = 115; 115 − 105 = 10 = 0 + 10.
+
+Check sample (D21): 10 of the 92 records excluded by both LLM runs were screened blind by H1; 9 agree, 1 retained (3062, a smart-meter review with an abstract silent on privacy, the gap known from round 1; excluded at full text as A-E6). Every LLM exclusion with code A-E2 in either run was re-read by H1: 17 in the recheck sheet and 2 in the check sample, plus 6 records excluded as A-E2 after their abstracts were added by hand (23 rechecked: 19 excluded, 4 retained for full text). At full text both LLM runs agree with H1 on all 10 decisions.
+
+Round 2 adds no study. The corpus remains at **93 studies** (`stream-a-v1.corpus-after-snowball1.csv`). Snowballing was stopped after this round and the corpus is fixed (DECISION.md D24).
 
 ## Seeds (14, after D20 and D22)
 

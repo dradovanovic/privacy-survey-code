@@ -1,0 +1,11 @@
+﻿n;record_id;title;ft_h1_decision;ft_h1_codes;llm_run1;llm_run2;status;ft_final_decision;ft_final_code;ft_final_reason;ft_final_at
+3061;openalex:W3094356548;Digitalization and decentralization driving transactive energy Internet: Key technologies and infrastructures;exclude;A-E3;exclude A-E3;exclude A-E3;agree;exclude;A-E3;agree;16.11.2026
+3062;openalex:W2911489589;IoT-enabled smart grid via SM: An overview;exclude;A-E3;exclude A-E6;exclude A-E6;code differs;;;open;
+3075;openalex:W3170345003;A review of non-technical loss attack models and detection methods in the smart grid;exclude;A-E6;exclude A-E6;exclude A-E6;agree;exclude;A-E6;agree;16.11.2026
+3081;semanticscholar:869af0c623ec2e307981f43e917e3324c07cf83d;A Survey on IoT-based Smart-Grid Overview;exclude;A-E3;exclude A-E6;exclude A-E6;code differs;exclude;A-E3;H1's A-I2 judgment stands (known pattern);16.11.2026
+3085;openalex:W2783020294;A technical review on smart grids in India;exclude;A-E3;exclude A-E2;exclude A-E2;code differs;exclude;A-E3;H1's A-I2 judgment stands (known pattern);16.11.2026
+3098;openalex:W4389371916;Blockchain-IoT Enabled Smart Metering System;exclude;A-E6;exclude A-E1;exclude A-E1;code differs;;;open;
+3156;openalex:W2766651241;Review of various modeling techniques for the detection of electricity theft in smart grid environment;exclude;A-E6;exclude A-E2;exclude A-E2;code differs;;;open;
+3164;openalex:W4289520518;Smart Energy Meters in Renewable-Energy-Based Power Networks: An Extensive Review;exclude;A-E6;exclude A-E2;exclude A-E2;code differs;;;open;
+3168;openalex:W2228714816;Smart meter: Applications, security issues and challenges;exclude;A-E6;exclude A-E1;exclude A-E1;code differs;;;open;
+3173;openalex:W4416008849;The role of smart meter feedback in enhancing inhabitants’ energy efficient behaviour in residential buildings;exclude;A-E6;exclude A-E6;exclude A-E6;agree;exclude;A-E6;agree;16.11.2026

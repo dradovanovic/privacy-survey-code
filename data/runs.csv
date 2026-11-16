@@ -803,3 +803,80 @@ timestamp,run_id,db,query_id,content_type,start_record,max_records,returned,tota
 2026-11-10T12:46:45+00:00,20261110T124642Z,openalex,stream-a-v1,abstract_backfill,50,50,50,50,200,doi:10.1016/j.comnet.2012.03.027|10.1016/j.comnet.2012.12.017|10.1016/j.comnet.2014.06.005|10.1016/j.comnet.2026.112422|10.1016/j.compeleceng.2024.109265|10.1016/j.cosrev.2026.100998|10.1016/j.egyai.2026.100853|10.1016/j.enbuild.2009.02.013|10.1016/j.enbuild.2024.114025|10.1016/j.eneco.2013.04.015|10.1016/j.engappai.2022.105721|10.1016/j.engappai.2024.108785|10.1016/j.enpol.2010.11.037|10.1016/j.epsr.2016.03.016|10.1016/j.epsr.2022.107835|10.1016/j.epsr.2022.108975|10.1016/j.erss.2021.102243|10.1016/j.est.2021.102591|10.1016/j.est.2022.104056|10.1016/j.est.2022.104609|10.1016/j.future.2011.04.014|10.1016/j.ijcip.2022.100547|10.1016/j.ijepes.2015.02.006|10.1016/j.ijepes.2021.107718|10.1016/j.iot.2025.101678|10.1016/j.jclepro.2013.09.019|10.1016/j.jclepro.2016.10.006|10.1016/j.jclepro.2026.147799|10.1016/j.jisa.2020.102518|10.1016/j.jnca.2016.08.012|10.1016/j.jnca.2016.10.003|10.1016/j.jnca.2019.01.012|10.1016/j.jnca.2022.103540|10.1016/j.jobe.2023.106031|10.1016/j.jup.2014.12.006|10.1016/j.jup.2025.102081|10.1016/j.jup.2026.102255|10.1016/j.neucom.2015.12.004|10.1016/j.nexres.2026.102673|10.1016/j.pmcj.2024.101905|10.1016/j.renene.2017.03.066|10.1016/j.rser.2013.03.023|10.1016/j.rser.2013.10.022|10.1016/j.rser.2014.03.031|10.1016/j.rser.2014.05.049|10.1016/j.rser.2014.07.187|10.1016/j.rser.2014.08.036|10.1016/j.rser.2015.01.046|10.1016/j.rser.2015.03.031|10.1016/j.rser.2015.04.170
 2026-11-10T12:46:47+00:00,20261110T124642Z,openalex,stream-a-v1,abstract_backfill,100,34,34,34,200,doi:10.1016/j.rser.2015.08.031|10.1016/j.rser.2015.09.012|10.1016/j.rser.2015.10.036|10.1016/j.rser.2015.10.117|10.1016/j.rser.2015.11.002|10.1016/j.rser.2015.12.114|10.1016/j.rser.2015.12.353|10.1016/j.rser.2016.01.011|10.1016/j.rser.2016.01.122|10.1016/j.rser.2016.06.021|10.1016/j.rser.2016.06.093|10.1016/j.rser.2016.10.034|10.1016/j.rser.2017.05.092|10.1016/j.rser.2017.05.096|10.1016/j.rser.2017.05.134|10.1016/j.rser.2017.05.208|10.1016/j.rser.2017.05.234|10.1016/j.rser.2017.07.045|10.1016/j.rser.2019.109362|10.1016/j.rser.2021.111072|10.1016/j.rser.2021.111358|10.1016/j.rser.2021.111915|10.1016/j.rser.2022.112446|10.1016/j.rser.2023.114151|10.1016/j.rser.2024.114748|10.1016/j.rser.2026.116873|10.1016/j.rser.2026.117014|10.1016/j.rser.2026.117112|10.1016/j.scs.2015.05.002|10.1016/j.segan.2016.02.005|10.1016/j.segan.2026.102207|10.1016/j.tej.2020.106879|10.1109/jproc.2011.2124210|10.12720/sgce.10.1.69-82
 2026-11-10T12:49:23+00:00,20261110T124642Z,semanticscholar,stream-a-v1,abstract_backfill,0,132,118,132,200,"paper/batch fields=abstract,externalIds ids=DOI:<132 DOIs>"
+2026-11-16T11:08:02+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_corpus,0,100,3,3,200,doi:10.1109/comst.2014.2320093|10.1016/j.ijepes.2014.06.025|10.18485/mtts_mr.2026.32.1.6
+2026-11-16T11:08:04+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,0,100,100,570,200,cites:W2101609731
+2026-11-16T11:08:06+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,100,100,100,570,200,cites:W2101609731
+2026-11-16T11:08:08+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,200,100,100,570,200,cites:W2101609731
+2026-11-16T11:08:10+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,300,100,100,570,200,cites:W2101609731
+2026-11-16T11:08:12+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,400,100,100,570,200,cites:W2101609731
+2026-11-16T11:08:13+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,500,100,70,570,200,cites:W2101609731
+2026-11-16T11:08:15+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,0,100,100,647,200,cites:W2044857874
+2026-11-16T11:08:17+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,100,100,100,647,200,cites:W2044857874
+2026-11-16T11:08:19+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,200,100,100,647,200,cites:W2044857874
+2026-11-16T11:08:21+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,300,100,100,647,200,cites:W2044857874
+2026-11-16T11:08:23+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,400,100,100,647,200,cites:W2044857874
+2026-11-16T11:08:25+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,500,100,100,647,200,cites:W2044857874
+2026-11-16T11:08:27+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,600,100,47,647,200,cites:W2044857874
+2026-11-16T11:08:28+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_forward,0,100,0,0,200,cites:W7166823194
+2026-11-16T11:08:30+00:00,20261116T110801Z,openalex,stream-a-v1,snowball_backward,0,100,79,79,200,"openalex:<82 work ids from referenced_works, sorted, from W1550953152>"
+2026-11-16T11:08:40+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_backward,0,500,0,,200,"paper/DOI:10.1109/comst.2014.2320093/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:08:45+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_forward,0,500,500,,200,"paper/DOI:10.1109/comst.2014.2320093/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:08:48+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_forward,500,500,26,,200,"paper/DOI:10.1109/comst.2014.2320093/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:08:51+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_backward,0,500,31,,200,"paper/DOI:10.1016/j.ijepes.2014.06.025/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:08:58+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_forward,0,500,500,,200,"paper/DOI:10.1016/j.ijepes.2014.06.025/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:09:00+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_forward,500,500,81,,200,"paper/DOI:10.1016/j.ijepes.2014.06.025/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:09:20+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_backward,0,500,0,,200,"paper/DOI:10.18485/mtts_mr.2026.32.1.6/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:09:21+00:00,20261116T110801Z,semanticscholar,stream-a-v1,snowball_forward,0,500,0,,200,"paper/DOI:10.18485/mtts_mr.2026.32.1.6/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:09:35+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_corpus,0,100,10,10,200,doi:10.1109/comst.2014.2320093|10.1016/j.ijepes.2014.06.025|10.18485/mtts_mr.2026.32.1.6|10.1016/j.rser.2026.116723|10.3390/electricity7030074|10.63748/ard7w292|10.1007/s00502-019-00779-4|10.3390/en14030719|10.3390/en14092502|10.3390/en18123002
+2026-11-16T11:09:37+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,100,570,200,cites:W2101609731
+2026-11-16T11:09:39+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,100,100,100,570,200,cites:W2101609731
+2026-11-16T11:09:41+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,200,100,100,570,200,cites:W2101609731
+2026-11-16T11:09:43+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,300,100,100,570,200,cites:W2101609731
+2026-11-16T11:09:45+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,400,100,100,570,200,cites:W2101609731
+2026-11-16T11:09:47+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,500,100,70,570,200,cites:W2101609731
+2026-11-16T11:09:49+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,100,647,200,cites:W2044857874
+2026-11-16T11:09:50+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,100,100,100,647,200,cites:W2044857874
+2026-11-16T11:09:52+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,200,100,100,647,200,cites:W2044857874
+2026-11-16T11:09:54+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,300,100,100,647,200,cites:W2044857874
+2026-11-16T11:09:56+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,400,100,100,647,200,cites:W2044857874
+2026-11-16T11:09:58+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,500,100,100,647,200,cites:W2044857874
+2026-11-16T11:10:00+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,600,100,47,647,200,cites:W2044857874
+2026-11-16T11:10:01+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,0,0,200,cites:W7166823194
+2026-11-16T11:10:03+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,19,19,200,cites:W7126049518
+2026-11-16T11:10:04+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,0,0,200,cites:W7170911375
+2026-11-16T11:10:05+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,0,0,200,cites:W7219573811
+2026-11-16T11:10:06+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,5,5,200,cites:W2994974114
+2026-11-16T11:10:08+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,72,72,200,cites:W3126557344
+2026-11-16T11:10:10+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,41,41,200,cites:W3158246138
+2026-11-16T11:10:12+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_forward,0,100,39,39,200,cites:W4411102473
+2026-11-16T11:10:14+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_backward,0,100,100,100,200,"openalex:<100 work ids from referenced_works, sorted, from W1144579682>"
+2026-11-16T11:10:16+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_backward,100,100,99,99,200,"openalex:<100 work ids from referenced_works, sorted, from W2060697189>"
+2026-11-16T11:10:18+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_backward,200,100,98,98,200,"openalex:<100 work ids from referenced_works, sorted, from W2277465170>"
+2026-11-16T11:10:20+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_backward,300,100,100,100,200,"openalex:<100 work ids from referenced_works, sorted, from W2794620754>"
+2026-11-16T11:10:22+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_backward,400,100,99,99,200,"openalex:<100 work ids from referenced_works, sorted, from W2979990517>"
+2026-11-16T11:10:24+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_backward,500,100,100,100,200,"openalex:<100 work ids from referenced_works, sorted, from W3138538842>"
+2026-11-16T11:10:25+00:00,20261116T110934Z,openalex,stream-a-v1,snowball_backward,600,100,57,57,200,"openalex:<63 work ids from referenced_works, sorted, from W4388802072>"
+2026-11-16T11:10:31+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,0,,200,"paper/DOI:10.1109/comst.2014.2320093/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:34+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,500,,200,"paper/DOI:10.1109/comst.2014.2320093/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:36+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,500,500,26,,200,"paper/DOI:10.1109/comst.2014.2320093/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:37+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,31,,200,"paper/DOI:10.1016/j.ijepes.2014.06.025/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:39+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,500,,200,"paper/DOI:10.1016/j.ijepes.2014.06.025/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:45+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,500,500,81,,200,"paper/DOI:10.1016/j.ijepes.2014.06.025/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:48+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,0,,200,"paper/DOI:10.18485/mtts_mr.2026.32.1.6/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:51+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,0,,200,"paper/DOI:10.18485/mtts_mr.2026.32.1.6/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:10:57+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,192,,200,"paper/DOI:10.1016/j.rser.2026.116723/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:17+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,11,,200,"paper/DOI:10.1016/j.rser.2026.116723/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:21+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,73,,200,"paper/DOI:10.3390/electricity7030074/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:24+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,0,,200,"paper/DOI:10.3390/electricity7030074/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:27+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,0,,404,"paper/DOI:10.63748/ard7w292/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:30+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,0,,404,"paper/DOI:10.63748/ard7w292/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:34+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,41,,200,"paper/DOI:10.1007/s00502-019-00779-4/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:35+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,4,,200,"paper/DOI:10.1007/s00502-019-00779-4/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:38+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,164,,200,"paper/DOI:10.3390/en14030719/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:11:40+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,59,,200,"paper/DOI:10.3390/en14030719/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:12:17+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,101,,200,"paper/DOI:10.3390/en14092502/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:12:23+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,33,,200,"paper/DOI:10.3390/en14092502/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:12:27+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_backward,0,500,28,,200,"paper/DOI:10.3390/en18123002/references fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:12:38+00:00,20261116T110934Z,semanticscholar,stream-a-v1,snowball_forward,0,500,26,,200,"paper/DOI:10.3390/en18123002/citations fields=paperId,externalIds,title,year,venue,publicationTypes,abstract"
+2026-11-16T11:13:10+00:00,20261116T111309Z,openalex,stream-a-v1,abstract_backfill,0,14,14,14,200,doi:10.1007/978-3-030-43494-6_1|10.1007/s11831-025-10364-y|10.1007/s12053-023-10161-1|10.1016/j.enbuild.2016.01.043|10.1016/j.energy.2016.04.065|10.1016/j.enpol.2012.05.055|10.1016/j.enpol.2017.08.032|10.1016/j.epsr.2021.107415|10.1016/j.ijepes.2017.12.020|10.1016/j.jobe.2021.102507|10.1016/j.rser.2017.10.040|10.1016/j.rser.2022.112224|10.1016/j.rser.2022.112794|10.1063/5.0154901
+2026-11-16T11:13:12+00:00,20261116T111309Z,semanticscholar,stream-a-v1,abstract_backfill,0,14,14,14,200,"paper/batch fields=abstract,externalIds ids=DOI:<14 DOIs>"

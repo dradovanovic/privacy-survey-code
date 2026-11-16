@@ -57,6 +57,42 @@ BACKFILL_ORDER = ("openalex", "crossref", "semanticscholar")
 BACKFILL_RUN = "20261110T124642Z"
 BACKFILL_NOTE = ("Crossref was not asked: `CROSSREF_MAILTO` is not configured, and the author decided to skip it "
                  "(it filled 0 of 258 abstracts in the main backfill of 2026-10-09).")
+START_CORPUS = DATA / "screening" / f"{QID}.corpus-initial.csv"     # the corpus the snowball run started from
+MARK_CORPUS = START_CORPUS                                          # the corpus in_corpus is marked against
+SEEN_FILES: tuple[Path, ...] = ()                                    # records of earlier rounds (seen_round1)
+RECORDS = DATA / "normalized" / f"{QID}.snowball.records.csv"
+BATCH_TAG = "sb-batch"
+ROUND_LABEL = ""
+DECISIONS = "D21"
+
+# --round 2 (instruction code/prompts/run-snowball-A-round2.md, DECISION.md D23): the 10 studies round 1 added,
+# same rules; works found in round 1 count as seen and are not screened again.
+ROUND2 = {
+    "SNOWBALL_RUN": "20261116T110934Z",
+    "SHEET": DATA / "screening" / f"{QID}.snowball-r2.screening-input.csv",
+    "TRIAGE": DATA / "screening" / f"{QID}.snowball-r2.triage.csv",
+    "REPORT": DATA / "reports" / f"{QID}.snowball-r2.screen.md",
+    "RECORDS": DATA / "normalized" / f"{QID}.snowball-r2.records.csv",
+    "START_CORPUS": DATA / "screening" / f"{QID}.corpus-snowball1-new.csv",
+    "MARK_CORPUS": DATA / "screening" / f"{QID}.corpus-after-snowball1.csv",
+    "SEEN_FILES": (DATA / "normalized" / f"{QID}.snowball.records.csv",),
+    "EXPECTED_F3": None,                      # no expected count
+    "FIRST_N": 3060,                          # round 1 ended at n = 3059
+    "QC_SEED": 20261116,
+    "SEEDS": {},                              # no seed check
+    "BATCH_TAG": "sb2-batch",
+    "BACKFILL_RUN": "20261116T111309Z",
+    "ROUND_LABEL": " (round 2)",
+    "DECISIONS": "D21, D23",
+}
+
+
+def use_round(n: int) -> None:
+    """Switch the module constants to round n (1: unchanged)."""
+    if n == 2:
+        globals().update(ROUND2)
+    elif n != 1:
+        sys.exit(f"--round must be 1 or 2; got {n}")
 
 
 def words(text: str) -> int:
@@ -64,11 +100,11 @@ def words(text: str) -> int:
 
 
 def batch_path(k: int) -> Path:
-    return DATA / "screening" / f"{QID}.sb-batch{k:02d}.ids.csv"
+    return DATA / "screening" / f"{QID}.{BATCH_TAG}{k:02d}.ids.csv"
 
 
 def jsonl_path(k: int, run: int) -> Path:
-    return LLM_DIR / f"{QID}.sb-batch{k:02d}.{PROMPT_VERSION}.run{run}.jsonl"
+    return LLM_DIR / f"{QID}.{BATCH_TAG}{k:02d}.{PROMPT_VERSION}.run{run}.jsonl"
 
 
 # ----------------------------------------------------------------------------
@@ -78,14 +114,17 @@ def jsonl_path(k: int, run: int) -> Path:
 def replay_records(query: dict) -> tuple[list[dict], list[list[dict]]]:
     """build_records of the snowball run from its raw files, plus the member works of each record."""
     from survey_pipeline import snowball as sb
-    corpus_path = DATA / "screening" / f"{QID}.corpus-initial.csv"
-    corpus = sb.load_corpus(corpus_path)
+    if not SNOWBALL_RUN:
+        sys.exit("no snowball run id set for this round; stop")
+    corpus = sb.load_corpus(START_CORPUS)
     edges, found = [], {}
     for s in sb.SOURCES:
         e, f, _ = sb.READERS[s](DATA / "raw" / s / "snowball" / SNOWBALL_RUN, corpus, QID, SNOWBALL_RUN)
         edges += e
         found.update(f)
-    records = sb.build_records(found, edges, corpus, sb.load_screened(DATA / "screening" / f"{QID}.csv"))
+    records = sb.build_records(found, edges, sb.load_corpus(MARK_CORPUS),
+                               sb.load_screened(DATA / "screening" / f"{QID}.csv"),
+                               seen=sb.load_seen(SEEN_FILES) if SEEN_FILES else None)
     groups, _ = sb.consolidate(found)            # build_records emits one record per group, in group order
     if len(groups) != len(records):
         sys.exit("consolidate and build_records disagree; stop")
@@ -119,24 +158,27 @@ def cmd_prepare(a) -> int:
 
     query = qc.load_query(str(QUERY))
     records, members = replay_records(query)
-    with open(DATA / "normalized" / f"{QID}.snowball.records.csv", encoding="utf-8-sig", newline="") as fh:
+    with open(RECORDS, encoding="utf-8-sig", newline="") as fh:
         saved = {(r["record_id"], r["title"]) for r in csv.DictReader(fh)}
     replayed = {("" if r["record_id"].startswith("s2-unmatched:") else r["record_id"], sb._one_line(r["title"]))
                 for r in records}
     if replayed != saved:
         print(f"replay differs from records.csv: {len(replayed ^ saved)} rows; stop")
         return 2
-    print(f"replayed run {SNOWBALL_RUN}: {len(records)} records, identical to {QID}.snowball.records.csv")
+    print(f"replayed run {SNOWBALL_RUN}: {len(records)} records, identical to {RECORDS.name}")
 
     sel = []
     for r, ms in zip(records, members):
-        if r["in_corpus"] or r["already_screened"]:
+        if not sb.is_new(r):
             continue
         if sb.filter_flags(query, r)["F3"]:
             sel.append((r, ms))
-    print(f"step 1: new works passing F3: {len(sel)} (expected {EXPECTED_F3})")
-    if len(sel) != EXPECTED_F3:
+    print(f"step 1: new works passing F3: {len(sel)}" + (f" (expected {EXPECTED_F3})" if EXPECTED_F3 else ""))
+    if EXPECTED_F3 is not None and len(sel) != EXPECTED_F3:
         print("count differs; stop")
+        return 2
+    if not sel:
+        print("no record passes F3; stop")
         return 2
     sel_dois = {d for r, _ in sel for d in r["dois"]}
     for name, doi in SEEDS.items():
@@ -302,7 +344,7 @@ def cmd_triage(a) -> int:
 def report_lines(rows, out, excl, k_qc, runs) -> list[str]:
     piles = collections.Counter(o["pile"] for o in out)
     pc = lambda d: ((d or {}).get("parsed") or {}).get("primary_code") or "-"   # noqa: E731
-    L = [f"# {QID}: snowballed records, LLM-first title/abstract screening (D21)", "",
+    L = [f"# {QID}: snowballed records{ROUND_LABEL}, LLM-first title/abstract screening ({DECISIONS})", "",
          f"Sheet `screening/{SHEET.name}` ({len(rows)} records, n {rows[0]['n']}-{rows[-1]['n']}; new works of "
          f"snowball run {SNOWBALL_RUN} passing F3). Prompt {PROMPT_VERSION}, two runs per record, "
          f"`screening/run_llm_screen.py` unchanged. Triage sheet `screening/{TRIAGE.name}`.", "",
@@ -356,12 +398,13 @@ def report_lines(rows, out, excl, k_qc, runs) -> list[str]:
           f"{sum(words(r['abstract']) < MIN_WORDS for r in rows)} "
           f"({sum(not r['abstract'] for r in rows)} with none) = pile `h1_no_abstract`.", ""]
 
-    L += ["## Snowballing seeds", "", "| seed | DOI | n | pile | run 1 | run 2 |", "|---|---|---|---|---|---|"]
-    for name, doi in SEEDS.items():
-        o = next((o for o in out if o["_doi"] == doi), None)
-        L.append(f"| {name} | {doi} | {o['n']} | {o['pile']} | {o['llm_run1']} | {o['llm_run2']} |" if o
-                 else f"| {name} | {doi} | - | not in sheet | | |")
-    L.append("")
+    if SEEDS:
+        L += ["## Snowballing seeds", "", "| seed | DOI | n | pile | run 1 | run 2 |", "|---|---|---|---|---|---|"]
+        for name, doi in SEEDS.items():
+            o = next((o for o in out if o["_doi"] == doi), None)
+            L.append(f"| {name} | {doi} | {o['n']} | {o['pile']} | {o['llm_run1']} | {o['llm_run2']} |" if o
+                     else f"| {name} | {doi} | - | not in sheet | | |")
+        L.append("")
 
     lines_all = [d for run in (1, 2) for d in runs[run].values()]
     errors = [d for d in lines_all if d["status"] != "ok"]
@@ -411,7 +454,12 @@ def main(argv=None) -> int:
     t = sub.add_parser("triage")
     t.add_argument("--allow-missing", action="store_true", help="write the triage although answers are missing")
     t.set_defaults(func=cmd_triage)
+    for s in (p, t):
+        s.add_argument("--round", type=int, default=1, choices=(1, 2),
+                       help="snowballing round: 2 switches file names, snowball run, first n, QC seed and checks "
+                            "to round 2 (D23); default 1 (unchanged)")
     a = ap.parse_args(argv)
+    use_round(a.round)
     return a.func(a)
 
 

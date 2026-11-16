@@ -63,7 +63,8 @@ EDGE_COLUMNS = ["corpus_n", "corpus_doi", "direction", "source", "found_id", "fo
 RECORD_COLUMNS = ["record_id", "doi", "title", "year", "content_type", "language", "venue", "abstract",
                   "keywords", "found_ids", "n_corpus_links", "corpus_ns", "directions", "sources",
                   "in_corpus", "already_screened"]
-FILTERS = ("F0", "F1", "F2", "F2t", "F3", "F3t")
+SEEN_COLUMN = "seen_round1"          # only written when --seen files are given
+FILTERS =("F0", "F1", "F2", "F2t", "F3", "F3t")
 _LINE_BREAKS = re.compile(r"\s*[\r\n\t\v\f\x85  ]+\s*")
 
 
@@ -106,6 +107,34 @@ def load_screened(path: str | Path) -> tuple[set[str], set[str]]:
             if tk:
                 titles.add(tk)
     return dois, titles
+
+
+def load_seen(paths) -> tuple[set[str], dict[str, set]]:
+    """
+    (DOIs, {normalized title: years}) of the works in earlier record files
+    (--seen; columns doi, title, year). An empty year is stored as None.
+    """
+    dois: set[str] = set()
+    titles: dict[str, set] = collections.defaultdict(set)
+    for path in paths:
+        with open(path, encoding="utf-8-sig", newline="") as fh:
+            for r in csv.DictReader(fh):
+                doi, tk = rec._clean_doi(r.get("doi")), rec.title_key(r.get("title") or "")
+                if doi:
+                    dois.add(doi)
+                if tk:
+                    titles[tk].add(int(r["year"]) if (r.get("year") or "").strip() else None)
+    return dois, dict(titles)
+
+
+def is_seen(seen: tuple[set[str], dict[str, set]], dois: set[str], tks: set[str], year) -> bool:
+    """By DOI, then by normalized title plus year; a missing year on either side matches on the title alone
+    (the rule of consolidate)."""
+    s_dois, s_titles = seen
+    if dois & s_dois:
+        return True
+    year = int(year) if year else None
+    return any(y is None or year is None or y == year for tk in tks for y in s_titles.get(tk, ()))
 
 
 # ----------------------------------------------------------------------------
@@ -411,8 +440,11 @@ def consolidate(found: dict[str, dict]) -> tuple[list[list[str]], dict[str, int]
 
 
 def build_records(found: dict[str, dict], edges: list[dict], corpus: list[dict],
-                  screened: tuple[set[str], set[str]]) -> list[dict]:
-    """One record per unique work, with its links to the corpus and the in_corpus / already_screened marks."""
+                  screened: tuple[set[str], set[str]], seen=None) -> list[dict]:
+    """
+    One record per unique work, with its links to the corpus and the in_corpus / already_screened marks;
+    with `seen` (load_seen) also the seen_round1 mark.
+    """
     groups, where = consolidate(found)
     links: dict[int, list[dict]] = collections.defaultdict(list)
     for e in edges:
@@ -447,7 +479,14 @@ def build_records(found: dict[str, dict], edges: list[dict], corpus: list[dict],
             "already_screened": bool(dois & s_dois or tks & s_titles),
             "dois": dois,
         })
+        if seen is not None:
+            out[-1][SEEN_COLUMN] = is_seen(seen, dois, tks, out[-1]["year"])
     return out
+
+
+def is_new(r: dict) -> bool:
+    """Not in the corpus, not already screened and (when marked) not seen in an earlier round."""
+    return not r["in_corpus"] and not r["already_screened"] and not r.get(SEEN_COLUMN)
 
 
 # ----------------------------------------------------------------------------
@@ -522,11 +561,15 @@ def write_edges(path: Path, edges: list[dict]) -> None:
 
 def write_records(path: Path, records: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    columns = list(RECORD_COLUMNS)
+    if records and SEEN_COLUMN in records[0]:
+        columns.insert(columns.index("already_screened") + 1, SEEN_COLUMN)
     with open(path, "w", newline="", encoding="utf-8-sig") as fh:
-        w = csv.DictWriter(fh, fieldnames=RECORD_COLUMNS, extrasaction="ignore")
+        w = csv.DictWriter(fh, fieldnames=columns, extrasaction="ignore")
         w.writeheader()
         for r in sorted(records, key=lambda r: (-r["n_corpus_links"], r["record_id"], r["title"])):
-            w.writerow({**r, "title": _one_line(r["title"]), "abstract": _one_line(r["abstract"]),
+            extra = {SEEN_COLUMN: int(r[SEEN_COLUMN])} if SEEN_COLUMN in r else {}
+            w.writerow({**r, **extra, "title": _one_line(r["title"]), "abstract": _one_line(r["abstract"]),
                         "venue": _one_line(r["venue"]), "year": r["year"] or "",
                         "keywords": _one_line("; ".join(r["keywords"])),
                         "found_ids": "; ".join(r["found_ids"]),
@@ -592,11 +635,17 @@ def seed_rows(seeds: list[dict], records: list[dict], query: dict) -> list[dict]
 
 
 def report_lines(qid: str, run_id: str, corpus_file: str, n_corpus: int, table: list[dict], stats: dict,
-                 calls: dict, summaries: dict, records: list[dict], fc: dict, seeds: list[dict],
-                 ov: dict) -> list[str]:
-    new = [r for r in records if not r["in_corpus"] and not r["already_screened"]]
+                 calls: dict, summaries: dict, records: list[dict], fc: dict, seeds: list[dict] | None,
+                 ov: dict, mark_file: str | None = None, n_mark: int | None = None,
+                 seen_files: tuple[str, ...] = ()) -> list[str]:
+    """seeds None leaves section 4 out (tagged rounds); mark_file / seen_files describe --corpus-mark / --seen."""
+    new = [r for r in records if is_new(r)]
+    seen_marked = bool(records) and SEEN_COLUMN in records[0]
+    n_mark = n_corpus if n_mark is None else n_mark
     L = [f"# Snowballing (collect and count): `{qid}`", "",
-         f"- run_id: {run_id}; corpus: `{corpus_file}` ({n_corpus} papers)",
+         f"- run_id: {run_id}; corpus: `{corpus_file}` ({n_corpus} papers)"
+         + (f"; `in_corpus` marked against `{mark_file}` ({n_mark} studies)" if mark_file else ""),
+         *([f"- `{SEEN_COLUMN}` marked against: " + ", ".join(f"`{s}`" for s in seen_files)] if seen_files else []),
          "- backward = references of a corpus paper; forward = works citing it. Sources: OpenAlex, Semantic Scholar.",
          "- This report counts only. No record is screened or removed; the data files hold every found work.", "",
          "## 1. Per source and direction", "",
@@ -646,11 +695,18 @@ def report_lines(qid: str, run_id: str, corpus_file: str, n_corpus: int, table: 
           "Deduplicated across sources and directions by DOI, then by normalized title plus year "
           "(a missing year matches on the title alone).", "",
           f"- unique works: {len(records)}",
-          f"- `in_corpus` (one of the {n_corpus}): {sum(r['in_corpus'] for r in records)}",
+          f"- `in_corpus` (one of the {n_mark}): {sum(r['in_corpus'] for r in records)}",
           f"- `already_screened` (in the screening sheet, by DOI or title; includes the corpus papers): "
           f"{sum(r['already_screened'] for r in records)}",
-          f"- already screened and not in the corpus: {sum(r['already_screened'] and not r['in_corpus'] for r in records)}",
-          f"- **new** (neither): {len(new)}"]
+          f"- already screened and not in the corpus: {sum(r['already_screened'] and not r['in_corpus'] for r in records)}"]
+    if seen_marked:
+        L += [f"- `{SEEN_COLUMN}` (found in the earlier round, by DOI, then by normalized title plus year): "
+              f"{sum(r[SEEN_COLUMN] for r in records)}",
+              f"- seen in the earlier round and neither in the corpus nor already screened: "
+              f"{sum(r[SEEN_COLUMN] and not r['in_corpus'] and not r['already_screened'] for r in records)}",
+              f"- **new** (none of the three): {len(new)}"]
+    else:
+        L.append(f"- **new** (neither): {len(new)}")
 
     c, d = fc["counts"], fc["detail"]
     L += ["", "## 3. Nested filters on the new works (counts only)", "",
@@ -671,11 +727,12 @@ def report_lines(qid: str, run_id: str, corpus_file: str, n_corpus: int, table: 
                  + " | ".join(str(d[k]["links"][b]) for b in LINK_BINS) + " |")
     L += ["", "Links = number of corpus papers the work is linked to (either direction, either source).",
           "Keywords are available for OpenAlex works only (machine-assigned keywords and concepts); "
-          "Semantic Scholar gives none, and no language.",
-          "", "## 4. Seeds expected via snowballing", "",
-          "| seed | DOI | found | backward | forward | corpus links | abstract | passes | fails |",
-          "|---|---|---|---|---|---|---|---|---|"]
-    for s in seeds:
+          "Semantic Scholar gives none, and no language."]
+    if seeds is not None:
+        L += ["", "## 4. Seeds expected via snowballing", "",
+              "| seed | DOI | found | backward | forward | corpus links | abstract | passes | fails |",
+              "|---|---|---|---|---|---|---|---|---|"]
+    for s in seeds or []:
         bd = s["by_direction"]
         L.append(f"| {s['id']} | {s['doi']} | {'yes' if s['found'] else '**no**'} | "
                  f"{', '.join(bd.get('backward') or []) or '-'} | {', '.join(bd.get('forward') or []) or '-'} | "
@@ -696,18 +753,25 @@ def report_lines(qid: str, run_id: str, corpus_file: str, n_corpus: int, table: 
 
 def run(query_path: str, data_dir: str | Path, corpus_file: str | None = None, limit: int | None = None,
         dry_run: bool = False, from_run: str | None = None, sources: tuple[str, ...] = SOURCES,
-        bib: str | None = None, retry_failed: bool = False) -> int:
+        bib: str | None = None, retry_failed: bool = False, tag: str = "", seen_files=(),
+        corpus_mark: str | None = None) -> int:
     """
     Collect (unless from_run replays a saved run), consolidate, count.
     dry_run: the first `limit` (default 3) corpus papers; requests are made,
     saved and logged as always, counts are printed, no output file is written.
+    tag: outputs <qid>.snowball-<tag>.*; a tagged round has no seed section (4).
+    seen_files: record files of earlier rounds; adds the seen_round1 mark, and a seen work is not new.
+    corpus_mark: the corpus the in_corpus mark is made against (default: the start corpus).
     """
     from .ieee_client import new_run_id
 
+    if tag and not re.fullmatch(r"[a-z0-9]+", tag):
+        raise ValueError(f"--tag must be lower-case letters and digits; got {tag!r}")
     query = qc.load_query(query_path)
     qid = query["query_id"]
     data_dir = Path(data_dir)
     corpus_path = Path(corpus_file) if corpus_file else data_dir / "screening" / f"{qid}.corpus-initial.csv"
+    mark_path = Path(corpus_mark) if corpus_mark else corpus_path
     corpus = load_corpus(corpus_path)
     n_all = len(corpus)
     if dry_run and not limit:
@@ -755,15 +819,22 @@ def run(query_path: str, data_dir: str | Path, corpus_file: str | None = None, l
         found.update(f)
         if s not in summaries and (raw[s] / "fetch_summary.json").is_file():
             summaries[s] = _load(raw[s] / "fetch_summary.json")
-    records = build_records(found, edges, load_corpus(corpus_path), load_screened(data_dir / "screening" / f"{qid}.csv"))
+    mark = load_corpus(mark_path)
+    records = build_records(found, edges, mark, load_screened(data_dir / "screening" / f"{qid}.csv"),
+                            seen=load_seen(seen_files) if seen_files else None)
     calls = api_calls(data_dir / "runs.csv", run_id)
     table = source_table(edges, stats, calls)
-    new = [r for r in records if not r["in_corpus"] and not r["already_screened"]]
+    new = [r for r in records if is_new(r)]
     fc = filter_counts(query, new)
     seed_path = Path(query_path).parent.parent / query.get("seed_set", "")
-    seeds = seed_rows(rec.load_seed_set(seed_path, bib), records, query) if query.get("seed_set") and seed_path.is_file() else []
+    if tag:
+        seeds = None
+    else:
+        seeds = seed_rows(rec.load_seed_set(seed_path, bib), records, query) if query.get("seed_set") and seed_path.is_file() else []
     lines = report_lines(qid, run_id, corpus_path.as_posix(), stats[sources[0]]["corpus"], table, stats, calls, summaries,
-                         records, fc, seeds, overlap(records))
+                         records, fc, seeds, overlap(records),
+                         mark_file=mark_path.as_posix() if corpus_mark else None, n_mark=len(mark),
+                         seen_files=tuple(Path(s).as_posix() for s in seen_files))
 
     print()
     for t in table:
@@ -772,15 +843,18 @@ def run(query_path: str, data_dir: str | Path, corpus_file: str | None = None, l
     for (db, ct), c in sorted(calls.items()):
         print(f"  requests {db} {ct}: {dict(c)}")
     print(f"  unique works: {len(records)}; in_corpus {sum(r['in_corpus'] for r in records)}; "
-          f"already_screened {sum(r['already_screened'] for r in records)}; new {len(new)}")
+          f"already_screened {sum(r['already_screened'] for r in records)}; "
+          + (f"{SEEN_COLUMN} {sum(r[SEEN_COLUMN] for r in records)}; " if seen_files else "")
+          + f"new {len(new)}")
     print("  new works per filter: " + ", ".join(f"{k} {v}" for k, v in fc["counts"].items()))
     if dry_run:
         print("\ndry run: raw responses saved and requests logged; no edge, record or report file written")
         return 0
-    stem = data_dir / "normalized" / f"{qid}.snowball"
+    name = f"{qid}.snowball" + (f"-{tag}" if tag else "")
+    stem = data_dir / "normalized" / name
     write_edges(Path(f"{stem}.edges.csv"), edges)
     write_records(Path(f"{stem}.records.csv"), records)
-    rep = data_dir / "reports" / f"{qid}.snowball.md"
+    rep = data_dir / "reports" / f"{name}.md"
     rep.parent.mkdir(parents=True, exist_ok=True)
     rep.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nedges -> {stem}.edges.csv ({len(edges)})\nrecords -> {stem}.records.csv ({len(records)})\nreport -> {rep}")

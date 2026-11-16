@@ -1,0 +1,11 @@
+n,record_id,source,doi,title,year,venue,content_type,ft_streams,seed,ft_h1_at
+1690,openalex:W2101609731,snowball,10.1109/comst.2014.2320093,"Survey in Smart Grid and Smart Home Security: Issues, Challenges and Countermeasures",2014,IEEE Communications Surveys & Tutorials,article,B;C,Komninos14a,14.11.2026
+1695,openalex:W2044857874,snowball,10.1016/j.ijepes.2014.06.025,A survey on Advanced Metering Infrastructure,2014,International Journal of Electrical Power & Energy Systems,article,B;C,Mohassel14a,14.11.2026
+1754,openalex:W7166823194,snowball,10.18485/mtts_mr.2026.32.1.6,"Mapping the Research Landscape of Smart Metering Infrastructure Security: A Bibliometric Analysis of Trends, Themes, and Future Directions",2026,Mikrotalasna revija,article,C,,14.11.2026
+1758,openalex:W7126049518,snowball,10.1016/j.rser.2026.116723,Smart meter data intelligence for sustainable distribution network operations: State-of-the-Art applications and pathways toward net-zero,2026,Renewable and Sustainable Energy Reviews,article,C,,14.11.2026
+1785,openalex:W7170911375,snowball,10.3390/electricity7030074,"Advanced Metering Infrastructure in Microgrids: Architecture, Challenges, and Future Directions",2026,Electricity,article,C,,14.11.2026
+1937,openalex:W7219573811,snowball,10.63748/ard7w292,Data-Driven Electricity Theft Detection in Smart Grids; A Systematic Review ofMethods and Cybersecurity Challenges,2026,Faculty of Engineering and Technology International Conference,review,C,,14.11.2026
+1962,openalex:W2994974114,snowball,10.1007/s00502-019-00779-4,Enhancing privacy in smart energy systems,2019,e+i Elektrotechnik und Informationstechnik,article,C,,14.11.2026
+2093,openalex:W3126557344,snowball,10.3390/en14030719,Watt’s up at Home? Smart Meter Data Analytics from a Consumer-Centric Perspective,2021,Energies,article,C,,14.11.2026
+2630,openalex:W3158246138,snowball,10.3390/en14092502,How Smart Meter Data Analysis Can Support Understanding the Impact of Occupant Behavior on Building Energy Performance: A Comprehensive Review,2021,Energies,article,B,,16.11.2026
+2636,openalex:W4411102473,snowball,10.3390/en18123002,"Impact of EU Laws on AI Adoption in Smart Grids: A Review of Regulatory Barriers, Technological Challenges, and Stakeholder Benefits",2025,Energies,article,C,,16.11.2026

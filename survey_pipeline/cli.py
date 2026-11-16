@@ -15,6 +15,7 @@ survey_pipeline command line.
     python -m survey_pipeline.cli diagnose-seeds queries/stream_a_v1.json --db scopus   # Scopus + OpenAlex DOI lookups
     python -m survey_pipeline.cli lookup (--doi 10.1109/... | --title "Exact title")   # one logged IEEE request
     python -m survey_pipeline.cli snowball  queries/stream_a_v1.json [--dry-run] [--limit N] [--from-run 2026...Z]
+                                            [--tag r2 --seen <records.csv> --corpus-mark <corpus.csv>]
 
 All output lives under data/ (override with --data-dir):
     data/compiled/<query_id>.md            compiled strings for every database (supplement material)
@@ -945,7 +946,8 @@ def cmd_snowball(args) -> int:
         return 2
     return snowball.run(args.query, args.data_dir, corpus_file=args.corpus, limit=args.limit,
                         dry_run=args.dry_run, from_run=args.from_run, sources=sources, bib=args.bib,
-                        retry_failed=args.retry_failed)
+                        retry_failed=args.retry_failed, tag=args.tag, seen_files=tuple(args.seen or ()),
+                        corpus_mark=args.corpus_mark)
 
 
 # ----------------------------------------------------------------------------
@@ -1010,6 +1012,13 @@ def main(argv=None) -> int:
                         "other than 404 (rate limit); new pages are saved next to the failed ones")
     s.add_argument("--sources", default="openalex,semanticscholar")
     s.add_argument("--bib", default=None, help="paper .bib for resolving key: seeds, as in summarize")
+    s.add_argument("--tag", default="", help="round tag: outputs <query_id>.snowball-<tag>.{edges,records}.csv "
+                                             "and reports/<query_id>.snowball-<tag>.md, without the seed section")
+    s.add_argument("--seen", action="append", default=None, metavar="CSV",
+                   help="repeatable: records file of an earlier round (columns doi, title, year); its works "
+                        "count as seen (column seen_round1) and are not new")
+    s.add_argument("--corpus-mark", default=None, metavar="CSV",
+                   help="corpus the in_corpus mark is made against (default: the --corpus file)")
     s.set_defaults(fn=cmd_snowball)
 
     args = p.parse_args(argv)
